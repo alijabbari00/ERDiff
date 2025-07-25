@@ -27,7 +27,7 @@ parser.add_argument("--batch_size", type=int, default=32, help="Batch size for t
 parser.add_argument("--appro_alpha", type=float, default=0.0, help="Approximator alpha parameter")
 parser.add_argument("--ot_weight", type=float, default=0.8, help="Weight for optimal transport loss")
 parser.add_argument("--epoches", type=int, default=400, help="Alternative epoch count (possible typo in config)")
-parser.add_argument("--seed", type=int, default=2024, help="Random seed for reproducibility")
+parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility")
 
 
 args = parser.parse_args()
