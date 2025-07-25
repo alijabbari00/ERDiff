@@ -34,7 +34,6 @@ import logging
 
 from model_functions.diffusion import *
 from model_functions.vae import *
-from model_functions.erdiff_utils import *
 
 logger = logging.getLogger('train_logger')
 logger.setLevel(level=logging.INFO)
