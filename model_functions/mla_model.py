@@ -34,14 +34,28 @@ def init_weights(m):
         torch.nn.init.xavier_uniform_(m.weight)
 
 class VAE_MLA_Model(nn.Module):
-    def __init__(self):
+    def __init__(self, spike_dim_s: int = num_neurons_s,
+                 spike_dim_t: int = num_neurons_t,
+                 vel_dim: int = 2):
+        """VAE model used for MLA.
+
+        Parameters
+        ----------
+        spike_dim_s : int
+            Number of source neurons.
+        spike_dim_t : int
+            Number of target neurons.
+        vel_dim : int
+            Dimensionality of the velocity output.
+        """
+
         super(VAE_MLA_Model, self).__init__()
         # Hyper-Parameters
-        self.spike_dim_s = num_neurons_s
-        self.spike_dim_t = num_neurons_t
+        self.spike_dim_s = spike_dim_s
+        self.spike_dim_t = spike_dim_t
         self.low_dim = 64
         self.latent_dim = 8
-        self.vel_dim = 2
+        self.vel_dim = vel_dim
         self.encoder_n_layers, self.decoder_n_layers = 1,1
         self.hidden_dims = [64,32]
         self.elu = nn.ELU()
@@ -92,9 +106,9 @@ class VAE_MLA_Model(nn.Module):
             if len(param.shape) > 1:
                 nn.init.xavier_uniform_(param,0.1)
 
-        self.vde_fc_minus_0 = nn.Linear(self.latent_dim, 2, bias = False)
-        self.vde_fc_minus_1 = nn.Linear(self.latent_dim, 2, bias = False)
-        self.vde_fc_minus_2 = nn.Linear(self.latent_dim, 2, bias = False)
+        self.vde_fc_minus_0 = nn.Linear(self.latent_dim, self.vel_dim, bias=False)
+        self.vde_fc_minus_1 = nn.Linear(self.latent_dim, self.vel_dim, bias=False)
+        self.vde_fc_minus_2 = nn.Linear(self.latent_dim, self.vel_dim, bias=False)
 
     def reparameterize(self, mu, logvar):
         """

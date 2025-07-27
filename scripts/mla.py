@@ -28,6 +28,7 @@ parser.add_argument("--appro_alpha", type=float, default=0.0, help="Approximator
 parser.add_argument("--ot_weight", type=float, default=0.8, help="Weight for optimal transport loss")
 parser.add_argument("--epoches", type=int, default=400, help="Alternative epoch count (possible typo in config)")
 parser.add_argument("--seed", type=int, default=2024, help="Random seed for reproducibility")
+parser.add_argument("--use_dummy_dataset", action="store_true", help="Use dummy 95x6 dataset")
 
 
 args = parser.parse_args()
@@ -51,18 +52,31 @@ from sklearn.metrics import r2_score
 
 
 
+# Default dataset
 num_neurons_s, num_neurons_t = 187, 172
+vel_dim = 2
 
-with open('../datasets/source_data_array.pkl', 'rb') as f:
-    train_data = pickle.load(f)
+if args.use_dummy_dataset:
+    from notebook_utils.data_prepare import load_dummy_dataset
+    num_neurons_s = num_neurons_t = 95
+    vel_dim = 6
+    dummy_x, dummy_y = load_dummy_dataset(200)
+    train_trial_spikes1 = dummy_x.numpy()
+    test_trial_spikes = dummy_x.numpy()
+    train_trial_vel1 = dummy_y.numpy()
+    test_trial_vel = dummy_y.numpy()
+    train_trial_dir1 = np.zeros(len(dummy_x))
+    test_trial_dir = np.zeros(len(dummy_x))
+else:
+    with open('../datasets/source_data_array.pkl', 'rb') as f:
+        train_data = pickle.load(f)
 
-with open('../datasets/target_data_array.pkl', 'rb') as f:
-    test_data = pickle.load(f)
+    with open('../datasets/target_data_array.pkl', 'rb') as f:
+        test_data = pickle.load(f)
 
+    train_trial_spikes1, train_trial_vel1, train_trial_dir1 = train_data['neural'], train_data['vel'], train_data['label']
 
-train_trial_spikes1, train_trial_vel1, train_trial_dir1 = train_data['neural'], train_data['vel'], train_data['label']
-
-test_trial_spikes, test_trial_vel, test_trial_dir = test_data['neural'], test_data['vel'], np.squeeze(test_data['label'])
+    test_trial_spikes, test_trial_vel, test_trial_dir = test_data['neural'], test_data['vel'], np.squeeze(test_data['label'])
 # print(np.shape(train_trial_vel[0]))
 
 
@@ -76,14 +90,18 @@ train_trial_vel_tide = train_trial_vel1
 train_trial_dic_tide = np.squeeze(np.vstack([array_train_trial_dir1]))
 test_trial_dic_tide = np.squeeze(np.vstack([test_trial_dir]))
 
-kern_sd_ms = float(0.01) * 1000 * 3
-kern_sd = int(round(kern_sd_ms / bin_width))
-window = signal.gaussian(kern_sd, kern_sd, sym=True)
-window /= np.sum(window)
-filt = lambda x: np.convolve(x, window, 'same')
+if not args.use_dummy_dataset:
+    kern_sd_ms = float(0.01) * 1000 * 3
+    kern_sd = int(round(kern_sd_ms / bin_width))
+    window = signal.gaussian(kern_sd, kern_sd, sym=True)
+    window /= np.sum(window)
+    filt = lambda x: np.convolve(x, window, 'same')
 
-train_trial_spikes_smoothed = np.apply_along_axis(filt, 1, train_trial_spikes_tide)
-test_trial_spikes_smoothed = np.apply_along_axis(filt, 1, test_trial_spikes)
+    train_trial_spikes_smoothed = np.apply_along_axis(filt, 1, train_trial_spikes_tide)
+    test_trial_spikes_smoothed = np.apply_along_axis(filt, 1, test_trial_spikes)
+else:
+    train_trial_spikes_smoothed = train_trial_spikes_tide
+    test_trial_spikes_smoothed = test_trial_spikes
 test_trial_vel = test_trial_vel
 
 
@@ -110,18 +128,20 @@ for k,v in diff_model.named_parameters():
 
 setup_seed(config["seed"])
 
-vanilla_model_dict = torch.load('../model_checkpoints/source_vae_model.pth', weights_only=True, map_location=torch.device('cpu'))
+if not args.use_dummy_dataset:
+    vanilla_model_dict = torch.load('../model_checkpoints/source_vae_model.pth', weights_only=True, map_location=torch.device('cpu'))
+else:
+    vanilla_model_dict = None
 
-MLA_model = VAE_MLA_Model().to(device)
-MLA_dict_keys = MLA_model.state_dict().keys()
-vanilla_model_dict_keys = vanilla_model_dict.keys()
+MLA_model = VAE_MLA_Model(spike_dim_s=num_neurons_s, spike_dim_t=num_neurons_t, vel_dim=vel_dim).to(device)
 
-MLA_dict_new = MLA_model.state_dict().copy()
-
-for key in vanilla_model_dict_keys:
-    MLA_dict_new[key] = vanilla_model_dict[key]
-
-MLA_model.load_state_dict(MLA_dict_new)
+if vanilla_model_dict is not None:
+    MLA_dict_keys = MLA_model.state_dict().keys()
+    vanilla_model_dict_keys = vanilla_model_dict.keys()
+    MLA_dict_new = MLA_model.state_dict().copy()
+    for key in vanilla_model_dict_keys:
+        MLA_dict_new[key] = vanilla_model_dict[key]
+    MLA_model.load_state_dict(MLA_dict_new)
 
 
 pre_total_loss_ = 1e8
@@ -238,18 +258,23 @@ for epoch in range(epoches):
             _, _, _, _, test_latents, _,_, x_after_lowd = MLA_model(spike_day_0, spike_day_k,p,q_test, train_flag = False)
             test_latents = np.array(test_latents.cpu())
 
-            vanilla_model_dict = torch.load('../model_checkpoints/vae_model_mla.pth', weights_only=True, map_location=torch.device('cpu'))
+            if not args.use_dummy_dataset:
+                vanilla_model_dict = torch.load('../model_checkpoints/vae_model_mla.pth', weights_only=True, map_location=torch.device('cpu'))
+            else:
+                vanilla_model_dict = None
 
-            VAE_Readout_model = VAE_Readout_Model()
-            DL_dict_keys = VAE_Readout_model.state_dict().keys()
-            vanilla_model_dict_keys = vanilla_model_dict.keys()
+            VAE_Readout_model = VAE_Readout_Model(spike_dim_s=num_neurons_s, spike_dim_t=num_neurons_t, vel_dim=vel_dim)
 
-            DL_dict_new = VAE_Readout_model.state_dict().copy()
+            if vanilla_model_dict is not None:
+                DL_dict_keys = VAE_Readout_model.state_dict().keys()
+                vanilla_model_dict_keys = vanilla_model_dict.keys()
 
-            for key in vanilla_model_dict_keys:
-                DL_dict_new[key] = vanilla_model_dict[key]
+                DL_dict_new = VAE_Readout_model.state_dict().copy()
 
-            VAE_Readout_model.load_state_dict(DL_dict_new)
+                for key in vanilla_model_dict_keys:
+                    DL_dict_new[key] = vanilla_model_dict[key]
+
+                VAE_Readout_model.load_state_dict(DL_dict_new)
 
             print(f"Epoch of: {epoch} Perf:")
             vel_cal(test_trial_vel, VAE_Readout_model, torch.Tensor(test_latents), x_after_lowd)
