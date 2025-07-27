@@ -31,3 +31,24 @@ def load_tensors_by_index(i: int, dataset_folder: str) -> (torch.Tensor, torch.T
 
 def get_dataset_num_days(dataset_folder: str):
     return len(os.listdir(dataset_folder))
+
+
+def load_dummy_dataset(num_samples: int = 100):
+    """Return dummy tensors mimicking the new dataset.
+
+    Parameters
+    ----------
+    num_samples : int, optional
+        Number of samples to generate.
+
+    Returns
+    -------
+    x : torch.Tensor
+        Dummy input tensor of shape ``(num_samples, 95)``.
+    y : torch.Tensor
+        Dummy target tensor of shape ``(num_samples, 6)``.
+    """
+
+    x = torch.randn(num_samples, 95)
+    y = torch.randn(num_samples, 6)
+    return x, y
