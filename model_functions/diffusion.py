@@ -24,7 +24,7 @@ import numpy as np
 
 # Hyper-parameters
 l_rate = 1e-3
-n_epochs = 500
+n_epochs = 10  # todo remove reset to 500
 timesteps = 100
 
 diff_layers = 4
