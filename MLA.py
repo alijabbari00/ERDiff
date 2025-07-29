@@ -250,8 +250,6 @@ for epoch in range(n_epochs):
                 name = param_to_name.get(param, '<no_name>')
                 print(f"{name}: requires_grad={param.requires_grad}, grad_is_None={param.grad is None}")
 
-    exit(0)
-
     with torch.no_grad():
         if (epoch % 5 == 0) or (epoch == n_epochs - 1):
             # print if the param low_d_readin_t in MLA_model has nan:
