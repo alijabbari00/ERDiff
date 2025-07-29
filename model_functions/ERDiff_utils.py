@@ -30,7 +30,9 @@ def vel_cal(test_trial_vel_tide, VAE_Readout_model, test_latents):
 
 
 def skilling_divergence(z_noisy, z_0, t):
-    grad = autograd.grad(outputs=z_noisy, inputs=z_0, grad_outputs=torch.ones_like(z_noisy), retain_graph=True)[0]
+    # grad = autograd.grad(outputs=z_noisy, inputs=z_0, grad_outputs=torch.ones_like(z_noisy), retain_graph=True)[0]
+    grad = autograd.grad(outputs=z_noisy, inputs=z_0, grad_outputs=torch.ones_like(z_noisy), create_graph=True,
+                         retain_graph=True)[0]
     divergence = torch.mean(z_noisy * grad * eps)
 
     return divergence
