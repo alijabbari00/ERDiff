@@ -138,46 +138,38 @@ class VAE_MLA_Model(nn.Module):
         else:
             z_0 = mu_x_0
 
+        print("z_0 has nan: ", torch.isnan(z_0).any())
+        if torch.isnan(z_0).any():
+            print(z_0)
+
         latent_states_x_0_tide = z_0.reshape((z_0.shape[0], -1))
 
         # x_k
-        # x_k = self.align_layer(x_k)
         x_k_al = self.low_d_readin_t(x_k)
         rnn_states_x_k, _ = self.encoder_rnn(x_k_al)
         mu_x_k = self.fc_mu_1(rnn_states_x_k)
         log_var_k = self.fc_log_var_1(rnn_states_x_k)
-        # mu_x_k = self.fc_mu_2(mu_x_k)
-        latent_states_x_k_tide = mu_x_k.reshape((mu_x_k.shape[0], -1))
 
         if train_flag:
             z_k = self.reparameterize(mu_x_k, log_var_k)
         else:
             z_k = mu_x_k
 
+        print("z_k has nan: ", torch.isnan(z_k).any())
+        if torch.isnan(z_k).any():
+            print(z_k)
+
         latent_states_x_k_tide = z_k.reshape((z_k.shape[0], -1))
 
         dist_0 = torch.mean(latent_states_x_0_tide, dim=0)
         dist_k = torch.mean(latent_states_x_k_tide, dim=0)
 
-        # kl_loss = nn.KLDivLoss()
-        # output_kl_loss = kl_loss(F.log_softmax(dist_0, dim=-1), F.softmax(dist_k, dim=-1))
-
         X = latent_states_x_0_tide.t()
         Y = latent_states_x_k_tide.t()
 
-        mu_0 = torch.mean(X, dim=1, keepdim=True)
-        mu_k = torch.mean(Y, dim=1, keepdim=True)
-
-        sigma_0 = 1 / x_0.shape[0] * torch.mm(X - mu_0, (X - mu_0).t())
-        sigma_k = 1 / x_k.shape[0] * torch.mm(Y - mu_k, (Y - mu_k).t())
-
         # Calculate_OT_Dist
-        x2, y2 = torch.sum(torch.pow(X, 2), dim=0), torch.sum(torch.pow(Y, 2), dim=0)
-        C = (torch.tile(y2[None, :], (X.shape[1], 1)) + torch.tile(x2[:, None], (1, Y.shape[1])) - 2 * (X.T @ Y))
         M = ot.dist(X.T, Y.T)
         M += 1e-4
-        # with torch.no_grad():
-        # T = ot.emd(torch.squeeze(p), torch.squeeze(q), M) # exact linear program
         sh_d = ot.sinkhorn2(torch.squeeze(p), torch.squeeze(q), M / M.max(), reg=0.01)  # exact linear program
 
         # Spike Decoder
@@ -191,8 +183,6 @@ class VAE_MLA_Model(nn.Module):
         print("vel_hat_minus_0 has nan: ", torch.isnan(vel_hat_minus_0).any())
         if torch.isnan(vel_hat_minus_0).any():
             print("vel_hat_minus_0: ", vel_hat_minus_0)
-        vel_hat_minus_1 = self.vde_fc_minus_1(vel_latent)
-        vel_hat_minus_2 = self.vde_fc_minus_2(vel_latent)
 
         vel_hat = torch.zeros_like(vel_hat_minus_0)
         print("vel_hat has nan: ", torch.isnan(vel_hat).any())
