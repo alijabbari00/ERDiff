@@ -196,8 +196,12 @@ def logger_performance(model):
 
 # print every parameter in optimizer, and whether it needs grad:
 print(0)
-for param in optimizer.param_groups[0]['params']:
-    print(param, param.requires_grad, param.grad is not None)
+for name, param in MLA_model.named_parameters():
+    if param.requires_grad:
+        # Check if this param is in the optimizer
+        in_optimizer = any(param is p for group in optimizer.param_groups for p in group['params'])
+        if in_optimizer:
+            print(name)
 
 # Maximum Likelihood Alignment
 best_r2 = -1000
