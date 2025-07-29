@@ -1,33 +1,12 @@
-import math
-from inspect import isfunction
-from functools import partial
-
-import matplotlib.pyplot as plt
-from tqdm.auto import tqdm
-
 import torch
-from torch import nn, einsum
-import torch.nn.functional as F
-
-import numpy as np
-import scipy.io as sio
-import matplotlib.pyplot as plt
-import os
-import sys
-from tqdm import tqdm_notebook
-
-
-from torch.optim import Adam
-
-import numpy as np
-
-len_trial, num_neurons = 25, 95
+from torch import nn
 
 start_pos = 0
 end_pos = 1
 
+
 class VAE_Model(nn.Module):
-    def __init__(self, spike_dim: int = num_neurons, vel_dim: int = 2):
+    def __init__(self, spike_dim: int = 95, vel_dim: int = 2, len_trial: int = 25):
         """VAE model used during pretraining.
 
         Parameters
@@ -39,48 +18,43 @@ class VAE_Model(nn.Module):
         """
 
         super().__init__()
+        self.len_trial = len_trial
+
         # Hyper-Parameters
         self.spike_dim = spike_dim
         self.low_dim = 64
         self.latent_dim = 8
         self.vel_dim = vel_dim
-        self.encoder_n_layers, self.decoder_n_layers = 1,1
-        self.hidden_dims = [64,32]
+        self.encoder_n_layers, self.decoder_n_layers = 1, 1
+        self.hidden_dims = [64, 32]
 
         # Low-D Readin
-        self.low_d_readin_s = nn.Linear(self.spike_dim,self.low_dim, bias = False)
+        self.low_d_readin_s = nn.Linear(self.spike_dim, self.low_dim, bias=False)
 
         # Encoder Structure
         self.encoder_rnn = nn.RNN(self.low_dim, self.hidden_dims[0], self.encoder_n_layers,
-         bidirectional= False, nonlinearity = 'tanh', batch_first = True)
+                                  bidirectional=False, nonlinearity='tanh', batch_first=True)
         for name, param in self.encoder_rnn.named_parameters():
             if len(param.shape) > 1:
-                nn.init.xavier_uniform_(param,0.1)
-        
-        # self.encoder_rnn_bn = nn.BatchNorm1d(len_trial)
+                nn.init.xavier_uniform_(param, 0.1)
 
         self.fc_mu_1 = nn.Linear(self.hidden_dims[0], self.latent_dim)
-        # self.fc_mu_2 = nn.Linear(self.hidden_dims[-1], self.latent_dim)
 
         self.fc_log_var_1 = nn.Linear(self.hidden_dims[0], self.latent_dim)
-        # self.fc_log_var_2 = nn.Linear(self.hidden_dims[-1], self.latent_dim)
-
 
         # Spike Decoder Structure
-        self.sde_rnn = nn.RNN(self.latent_dim, self.latent_dim, self.decoder_n_layers, bidirectional= False,
-         nonlinearity = 'tanh', batch_first = True)
-
-        # self.sde_rnn_bn = nn.BatchNorm1d(len_trial)
+        self.sde_rnn = nn.RNN(self.latent_dim, self.latent_dim, self.decoder_n_layers, bidirectional=False,
+                              nonlinearity='tanh', batch_first=True)
 
         self.sde_fc1 = nn.Linear(self.latent_dim, self.hidden_dims[0])
         self.sde_fc2 = nn.Linear(self.hidden_dims[0], self.spike_dim)
 
         # Velocity Decoder Structure
-        self.vde_rnn = nn.RNN(self.latent_dim, self.latent_dim, self.decoder_n_layers, bidirectional= False,
-         nonlinearity = 'tanh', batch_first = True)
+        self.vde_rnn = nn.RNN(self.latent_dim, self.latent_dim, self.decoder_n_layers, bidirectional=False,
+                              nonlinearity='tanh', batch_first=True)
         for name, param in self.vde_rnn.named_parameters():
             if len(param.shape) > 1:
-                nn.init.xavier_uniform_(param,0.1)
+                nn.init.xavier_uniform_(param, 0.1)
 
         self.vde_fc_minus_0 = nn.Linear(self.latent_dim, self.vel_dim, bias=False)
         self.vde_fc_minus_1 = nn.Linear(self.latent_dim, self.vel_dim, bias=False)
@@ -88,7 +62,7 @@ class VAE_Model(nn.Module):
 
         self.elu = nn.ELU()
         self.softplus = nn.Softplus()
-        
+
     def reparameterize(self, mu, logvar):
         """
         Reparameterization trick to sample from N(mu, var) from
@@ -122,23 +96,15 @@ class VAE_Model(nn.Module):
         # Spike Decoder
         re_sp, _ = self.sde_rnn(z)
         re_sp = self.sde_fc1(re_sp)
-        re_sp = (self.sde_fc2(re_sp))
-        # re_sp = self.softplus(self.sde_fc2(re_sp))
+        re_sp = self.sde_fc2(re_sp)
 
         # Velocity Decoder
         vel_latent = z
         vel_hat_minus_0 = self.vde_fc_minus_0(vel_latent)
-        vel_hat_minus_1 = self.vde_fc_minus_1(vel_latent)
-        vel_hat_minus_2 = self.vde_fc_minus_2(vel_latent)
 
         vel_hat = torch.zeros_like(vel_hat_minus_0)
-        # print("len_trial:", len_trial)
-        # print("start_pos:", start_pos)
-        for i in range(len_trial - start_pos):
-            vel_hat[:,i,:] += vel_hat_minus_0[:,i,:]
-            # if i > 0:
-            #     vel_hat[:,i,:] += vel_hat_minus_1[:,i-1,:]
-            # if i > 1:
-            #     vel_hat[:,i,:] += vel_hat_minus_2[:,i-2,:]
+
+        for i in range(self.len_trial - start_pos):
+            vel_hat[:, i, :] += vel_hat_minus_0[:, i, :]
 
         return re_sp, vel_hat, mu, log_var
