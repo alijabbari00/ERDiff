@@ -185,6 +185,7 @@ def logger_performance(model):
     # print if inputs to the following have nan:
     print("test trial vel nan: ", np.isnan(test_trial_vel_tide).any())
     print("vel_hat_test nan: ", torch.isnan(vel_hat_test).any())
+    print(vel_hat_test)
     key_metric = 100 * r2_score(test_trial_vel_tide.reshape((-1, 2)), vel_hat_test.reshape((-1, 2)).cpu(),
                                 multioutput='uniform_average')
     return key_metric
