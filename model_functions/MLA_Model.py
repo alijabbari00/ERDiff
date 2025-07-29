@@ -173,6 +173,21 @@ class VAE_MLA_Model(nn.Module):
         # Calculate_OT_Dist
         M = ot.dist(X.T, Y.T)
         M += 1e-4
+        # some anomaly is happening in the following line, so we'll check a few things:
+        if torch.isnan(M).any():
+            print("M has nan: ", torch.isnan(M).any())
+        if torch.isinf(M).any():
+            print("M has inf: ", torch.isinf(M).any())
+        if torch.isneginf(M).any():
+            print("M has neginf: ", torch.isneginf(M).any())
+        if torch.isnan(M/M.max()).any():
+            print("M/M.max() has nan: ", torch.isnan(M/M.max()).any())
+        if torch.isinf(M/M.max()).any():
+            print("M/M.max() has inf: ", torch.isinf(M/M.max()).any())
+        if torch.isneginf(M/M.max()).any():
+            print("M/M.max() has neginf: ", torch.isneginf(M/M.max()).any())
+        if torch.isnan(ot.sinkhorn2(torch.squeeze(p), torch.squeeze(q), M / M.max(), reg=0.01)).any():
+            print("ot.sinkhorn2 has nan: ", torch.isnan(ot.sinkhorn2(torch.squeeze(p), torch.squeeze(q), M / M.max(), reg=0.01)).any())
         sh_d = ot.sinkhorn2(torch.squeeze(p), torch.squeeze(q), M / M.max(), reg=0.01)  # exact linear program
 
         # Spike Decoder
