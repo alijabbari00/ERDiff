@@ -17,7 +17,7 @@ def get_batches(x, batch_size):
 
 
 def vel_cal(test_trial_vel_tide, VAE_Readout_model, test_latents):
-    test_latents = Variable(torch.from_numpy(test_latents)).float().to(VAE_Readout_model.device)
+    test_latents = Variable(torch.from_numpy(test_latents)).float()
 
     with torch.no_grad():
         re_sp_test, vel_hat_test = VAE_Readout_model(test_latents, train_flag=False)

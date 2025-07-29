@@ -251,6 +251,6 @@ for key in vanilla_model_dict_keys:
     DL_dict_new[key] = vanilla_model_dict[key]
 
 VAE_Readout_model.load_state_dict(DL_dict_new)
-VAE_Readout_model.to(device)
+VAE_Readout_model.cpu()
 
 vel_cal(test_trial_vel_tide, VAE_Readout_model, test_latents)
