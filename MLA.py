@@ -125,10 +125,13 @@ MLA_dict_new = MLA_model.state_dict().copy()
 
 for key in vanilla_model_dict_keys:
     MLA_dict_new[key] = vanilla_model_dict[key]
-    # print if the key has nan:
-    print(key, torch.isnan(MLA_dict_new[key]).any())
 
 MLA_model.load_state_dict(MLA_dict_new)
+
+for key in MLA_model.state_dict().keys():
+    # print if the key has nan:
+    print(key, torch.isnan(MLA_model.state_dict()[key]).any())
+
 
 pre_total_loss_ = 1e18
 l_rate = 1e-3
