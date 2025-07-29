@@ -41,6 +41,8 @@ class DiffusionEmbedding(nn.Module):
         self.projection2 = nn.Linear(projection_dim, projection_dim)
 
     def forward(self, diffusion_step):
+        # set to the same device as embedding
+        diffusion_step = diffusion_step.to(self.embedding.device)
         x = self.embedding[diffusion_step]
         x = self.projection1(x)
         x = F.silu(x)
@@ -49,10 +51,10 @@ class DiffusionEmbedding(nn.Module):
         return x
 
     def _build_embedding(self, num_steps, dim=64):
-        steps = torch.arange(num_steps).unsqueeze(1)
-        frequencies = 10.0 ** (torch.arange(dim) / (dim - 1) * 4.0).unsqueeze(0)
+        steps = torch.arange(num_steps).unsqueeze(1).to(self.embedding.device)
+        frequencies = 10.0 ** (torch.arange(dim).to(self.embedding.device) / (dim - 1) * 4.0).unsqueeze(0)
         table = steps * frequencies
-        table = torch.cat([torch.sin(table), torch.cos(table)], dim=1)
+        table = torch.cat([torch.sin(table), torch.cos(table)], dim=1).to(self.embedding.device)
         return table
 
 
@@ -83,6 +85,9 @@ class diff_STBlock(nn.Module):
         )
 
     def forward(self, x, diffusion_step):
+        # set to the same device
+        diffusion_step = diffusion_step.to(self.diffusion_embedding.embedding.device)
+        x = x.to(self.diffusion_embedding.embedding.device)
         B, inputdim, K, L = x.shape
 
         x = x.reshape(B, inputdim, K * L)

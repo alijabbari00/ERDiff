@@ -204,7 +204,7 @@ for epoch in range(epoches):
     t = torch.randint(0, timesteps, (batch_size,), device=device).long()
     noise = torch.randn_like(latents_k)
 
-    z_noisy = q_sample(x_start=latents_k, t=t, noise=noise)
+    z_noisy = q_sample(x_start=latents_k, t=t, noise=noise).to(device)
     predicted_noise = diff_model(z_noisy, t)
     total_loss += appro_alpha * F.smooth_l1_loss(noise, predicted_noise)
 
