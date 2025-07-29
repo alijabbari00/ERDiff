@@ -166,7 +166,7 @@ MLA_model.vde_fc_minus_0.weight.requires_grad = False
 
 MLA_model.to(device)
 
-epoches = 300
+epoches = 10
 test_trial_spikes_stand_half_len = len(test_trial_spikes_stand) // 2
 
 spike_day_0 = Variable(torch.from_numpy(real_train_trial_spikes_stand)).float().to(device)
@@ -232,6 +232,8 @@ MLA_model = VAE_MLA_Model()
 
 MLA_model.load_state_dict(vanilla_model_dict)
 
+MLA_model.to(device)
+
 with torch.no_grad():
     _, _, _, _, test_latents, _, _ = MLA_model(spike_train, spike_test, p, q_test, train_flag=False)
 test_latents = np.array(test_latents)
@@ -249,5 +251,6 @@ for key in vanilla_model_dict_keys:
     DL_dict_new[key] = vanilla_model_dict[key]
 
 VAE_Readout_model.load_state_dict(DL_dict_new)
+VAE_Readout_model.to(device)
 
 vel_cal(test_trial_vel_tide, VAE_Readout_model, test_latents)
