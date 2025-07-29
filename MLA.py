@@ -100,6 +100,8 @@ diff_model.load_state_dict(diff_model_dict)
 for k, v in diff_model.named_parameters():
     v.requires_grad = False
 
+diff_model = diff_model.to(device)
+
 import random
 
 
@@ -179,13 +181,6 @@ def logger_performance(model):
     re_sp_test, vel_hat_test, _, _, _, _, _ = model(spike_train, spike_test, p, q_test, train_flag=False)
 
     sys.stdout.flush()
-    # print if vel_hat_test has nan:
-    print("-" * 200)
-    print("vel_hat_test (tensor) has nan:", torch.isnan(vel_hat_test).any())
-    print(vel_hat_test)
-    # print if test_trial_vel_tide has nan:
-    print("test_trial_vel_tide (np array) has nan:", np.isnan(test_trial_vel_tide).any())
-    print("-" * 200)
     key_metric = 100 * r2_score(test_trial_vel_tide.reshape((-1, 2)), vel_hat_test.reshape((-1, 2)),
                                 multioutput='uniform_average')
     return key_metric
