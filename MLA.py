@@ -164,6 +164,8 @@ MLA_model.sde_fc2.weight.requires_grad = False
 MLA_model.sde_fc2.bias.requires_grad = False
 MLA_model.vde_fc_minus_0.weight.requires_grad = False
 
+MLA_model.to(device)
+
 epoches = 300
 test_trial_spikes_stand_half_len = len(test_trial_spikes_stand) // 2
 
@@ -202,7 +204,7 @@ for epoch in range(epoches):
 
     batch_size = latents_k.shape[0]
     t = torch.randint(0, timesteps, (batch_size,), device=device).long()
-    noise = torch.randn_like(latents_k)
+    noise = torch.randn_like(latents_k).to(device)
 
     z_noisy = q_sample(x_start=latents_k, t=t, noise=noise).to(device)
     predicted_noise = diff_model(z_noisy, t)
