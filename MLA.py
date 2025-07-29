@@ -204,10 +204,6 @@ for epoch in range(n_epochs):
 
     optimizer.zero_grad()
 
-    # print if the param low_d_readin_t in MLA_model has nan:
-    print(1)
-    print("low_d_readin_t nan: ",
-          {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
     # check gradients
     print(1.1)
     for name, param in MLA_model.low_d_readin_t.named_parameters():
@@ -219,10 +215,6 @@ for epoch in range(n_epochs):
     re_sp, _, distri_0, distri_k, latents_k, output_sh_loss, log_var = MLA_model(spike_day_0, spike_day_k, p, q,
                                                                                  train_flag=True)
 
-    # print if the param low_d_readin_t in MLA_model has nan:
-    print(2)
-    print("low_d_readin_t nan: ",
-          {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
     # check gradients
     print(2.1)
     for name, param in MLA_model.low_d_readin_t.named_parameters():
@@ -236,10 +228,6 @@ for epoch in range(n_epochs):
     latents_k = latents_k[:, None, :, :]
     latents_k = torch.transpose(latents_k, 3, 2)
 
-    # print if the param low_d_readin_t in MLA_model has nan:
-    print(3)
-    print("low_d_readin_t nan: ",
-          {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
     # check gradients
     print(3.1)
     for name, param in MLA_model.low_d_readin_t.named_parameters():
@@ -251,11 +239,6 @@ for epoch in range(n_epochs):
     batch_size = latents_k.shape[0]
     t = torch.randint(0, timesteps, (batch_size,), device=device).long()
     noise = torch.randn_like(latents_k).to(device)
-
-    # print if the param low_d_readin_t in MLA_model has nan:
-    print(4)
-    print("low_d_readin_t nan: ",
-          {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
 
     # Check gradients
     print(4.1)
@@ -269,10 +252,6 @@ for epoch in range(n_epochs):
     predicted_noise = diff_model(z_noisy, t)
     total_loss += appro_alpha * F.smooth_l1_loss(noise, predicted_noise)
 
-    # print if the param low_d_readin_t in MLA_model has nan:
-    print(5)
-    print("low_d_readin_t nan: ",
-          {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
     # check gradients
     print(5.1)
     for name, param in MLA_model.low_d_readin_t.named_parameters():
