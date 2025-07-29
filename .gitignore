@@ -1,0 +1,7 @@
+.venv
+.idea
+erdiff.ipynb
+model_checkpoints
+model_checkpoints_bkup
+model_checkpoints_bkup_pre_refactor
+*.log
