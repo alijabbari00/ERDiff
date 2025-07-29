@@ -162,7 +162,7 @@ class VAE_MLA_Model(nn.Module):
         print("log_var_k has nan: ", torch.isnan(log_var_k).any())
         if torch.isnan(log_var_k).any():
             print(log_var_k)
-        print("self.low_d_readin_t has nan in any sub-param: ", [torch.isnan(param).any() for param in self.low_d_readin_t.parameters()])
+        print("self.low_d_readin_t has nan in any sub-param: ", {key: torch.isnan(param).any() for key, param in self.low_d_readin_t.named_parameters()})
         if any([torch.isnan(param).any() for param in self.low_d_readin_t.parameters()]):
             print(self.low_d_readin_t.parameters())
         print("self.encoder_rnn has nan in any sub-param: ", [torch.isnan(param).any() for param in self.encoder_rnn.parameters()])
