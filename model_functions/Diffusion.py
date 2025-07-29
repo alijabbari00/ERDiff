@@ -51,10 +51,10 @@ class DiffusionEmbedding(nn.Module):
         return x
 
     def _build_embedding(self, num_steps, dim=64):
-        steps = torch.arange(num_steps).unsqueeze(1).to(self.embedding.device)
-        frequencies = 10.0 ** (torch.arange(dim).to(self.embedding.device) / (dim - 1) * 4.0).unsqueeze(0)
+        steps = torch.arange(num_steps).unsqueeze(1)
+        frequencies = 10.0 ** (torch.arange(dim) / (dim - 1) * 4.0).unsqueeze(0)
         table = steps * frequencies
-        table = torch.cat([torch.sin(table), torch.cos(table)], dim=1).to(self.embedding.device)
+        table = torch.cat([torch.sin(table), torch.cos(table)], dim=1)
         return table
 
 
