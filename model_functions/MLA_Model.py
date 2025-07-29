@@ -113,6 +113,18 @@ class VAE_MLA_Model(nn.Module):
         return (trace_term + mean_term).float()
 
     def forward(self, x_0, x_k, p, q, train_flag):
+        print("x_0 has nan: ", torch.isnan(x_0).any())
+        if torch.isnan(x_0).any():
+            print(x_0)
+        print("x_k has nan: ", torch.isnan(x_k).any())
+        if torch.isnan(x_k).any():
+            print(x_k)
+        print("p has nan: ", torch.isnan(p).any())
+        if torch.isnan(p).any():
+            print(p)
+        print("q has nan: ", torch.isnan(q).any())
+        if torch.isnan(q).any():
+            print(q)
 
         # Encoder
         # x_0
