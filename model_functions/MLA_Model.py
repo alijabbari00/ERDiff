@@ -113,14 +113,14 @@ class VAE_MLA_Model(nn.Module):
         return (trace_term + mean_term).float()
 
     def forward(self, x_0, x_k, p, q, train_flag):
-        print('\n')
-        print("x_0 has nan: ", torch.isnan(x_0).any())
-        print("x_k has nan: ", torch.isnan(x_k).any())
-
-        # print if the param low_d_readin_t in MLA_model has nan:
-        print(999)
-        print("low_d_readin_t nan: ",
-              {key: torch.isnan(param).any() for key, param in self.low_d_readin_t.named_parameters()})
+        # print('\n')
+        # print("x_0 has nan: ", torch.isnan(x_0).any())
+        # print("x_k has nan: ", torch.isnan(x_k).any())
+        #
+        # # print if the param low_d_readin_t in MLA_model has nan:
+        # print(999)
+        # print("low_d_readin_t nan: ",
+        #       {key: torch.isnan(param).any() for key, param in self.low_d_readin_t.named_parameters()})
 
         # Encoder
         # x_0
@@ -134,7 +134,7 @@ class VAE_MLA_Model(nn.Module):
         else:
             z_0 = mu_x_0
 
-        print("z_0 has nan: ", torch.isnan(z_0).any())
+        # print("z_0 has nan: ", torch.isnan(z_0).any())
 
         latent_states_x_0_tide = z_0.reshape((z_0.shape[0], -1))
 
@@ -144,15 +144,15 @@ class VAE_MLA_Model(nn.Module):
         mu_x_k = self.fc_mu_1(rnn_states_x_k)
         log_var_k = self.fc_log_var_1(rnn_states_x_k)
 
-        print("x_k_al has nan: ", torch.isnan(x_k_al).any())
-        print("self.low_d_readin_t has nan in any sub-param: ", {key: torch.isnan(param).any() for key, param in self.low_d_readin_t.named_parameters()})
+        # print("x_k_al has nan: ", torch.isnan(x_k_al).any())
+        # print("self.low_d_readin_t has nan in any sub-param: ", {key: torch.isnan(param).any() for key, param in self.low_d_readin_t.named_parameters()})
 
         if train_flag:
             z_k = self.reparameterize(mu_x_k, log_var_k)
         else:
             z_k = mu_x_k
 
-        print("z_k has nan: ", torch.isnan(z_k).any())
+        # print("z_k has nan: ", torch.isnan(z_k).any())
 
         latent_states_x_k_tide = z_k.reshape((z_k.shape[0], -1))
 
