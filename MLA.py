@@ -183,7 +183,7 @@ def logger_performance(model):
 
     sys.stdout.flush()
     # print if inputs to the following have nan:
-    print("vel_hat_test nan: ", torch.isnan(vel_hat_test).any())
+    # print("vel_hat_test nan: ", torch.isnan(vel_hat_test).any())
     key_metric = 100 * r2_score(test_trial_vel_tide.reshape((-1, 2)), vel_hat_test.reshape((-1, 2)).cpu(),
                                 multioutput='uniform_average')
     return key_metric
@@ -223,32 +223,32 @@ for epoch in range(n_epochs):
 
     total_loss += skilling_divergence(z_noisy, latents_k, t)
 
-    # # print if the param low_d_readin_t in MLA_model has nan:
-    # print(7)
-    # print("low_d_readin_t nan: ",
-    #       {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
-    #
-    # print(f"Loss: {total_loss.item()}")
+    # print if the param low_d_readin_t in MLA_model has nan:
+    print(7)
+    print("low_d_readin_t nan: ",
+          {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+
+    print(f"Loss: {total_loss.item()}")
 
     total_loss.backward(retain_graph=True)
     optimizer.step()
 
-    # # print if the param low_d_readin_t in MLA_model has nan:
-    # print(8)
-    # print("low_d_readin_t nan: ",
-    #       {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
-    #
-    # print(8.1)
-    # for name, param in MLA_model.low_d_readin_t.named_parameters():
-    #     if param.grad is not None:
-    #         print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
-    #     else:
-    #         print(f"{name} grad is None")
-    # for group in optimizer.param_groups:
-    #     for param in group['params']:
-    #         if param.requires_grad:
-    #             name = param_to_name.get(param, '<no_name>')
-    #             print(f"{name}: requires_grad={param.requires_grad}, grad_is_None={param.grad is None}")
+    # print if the param low_d_readin_t in MLA_model has nan:
+    print(8)
+    print("low_d_readin_t nan: ",
+          {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+
+    print(8.1)
+    for name, param in MLA_model.low_d_readin_t.named_parameters():
+        if param.grad is not None:
+            print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
+        else:
+            print(f"{name} grad is None")
+    for group in optimizer.param_groups:
+        for param in group['params']:
+            if param.requires_grad:
+                name = param_to_name.get(param, '<no_name>')
+                print(f"{name}: requires_grad={param.requires_grad}, grad_is_None={param.grad is None}")
 
     with torch.no_grad():
         if (epoch % 5 == 0) or (epoch == n_epochs - 1):
