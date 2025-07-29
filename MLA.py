@@ -125,6 +125,8 @@ MLA_dict_new = MLA_model.state_dict().copy()
 
 for key in vanilla_model_dict_keys:
     MLA_dict_new[key] = vanilla_model_dict[key]
+    # print if the key has nan:
+    print(key, torch.isnan(MLA_dict_new[key]).any())
 
 MLA_model.load_state_dict(MLA_dict_new)
 
