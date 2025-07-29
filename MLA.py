@@ -132,7 +132,6 @@ for key in MLA_model.state_dict().keys():
     # print if the key has nan:
     print(key, torch.isnan(MLA_model.state_dict()[key]).any())
 
-
 pre_total_loss_ = 1e18
 l_rate = 1e-3
 total_loss_list_ = []
@@ -198,8 +197,7 @@ def logger_performance(model):
 # print every parameter in optimizer, and whether it needs grad:
 print(0)
 for param in optimizer.param_groups[0]['params']:
-    print(param, param.requires_grad)
-
+    print(param, param.requires_grad, param.grad is not None)
 
 # Maximum Likelihood Alignment
 best_r2 = -1000
@@ -209,14 +207,30 @@ for epoch in range(n_epochs):
 
     # print if the param low_d_readin_t in MLA_model has nan:
     print(1)
-    print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+    print("low_d_readin_t nan: ",
+          {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+    # check gradients
+    print(1.1)
+    for name, param in MLA_model.low_d_readin_t.named_parameters():
+        if param.grad is not None:
+            print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
+        else:
+            print(f"{name} grad is None")
 
     re_sp, _, distri_0, distri_k, latents_k, output_sh_loss, log_var = MLA_model(spike_day_0, spike_day_k, p, q,
                                                                                  train_flag=True)
 
     # print if the param low_d_readin_t in MLA_model has nan:
     print(2)
-    print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+    print("low_d_readin_t nan: ",
+          {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+    # check gradients
+    print(2.1)
+    for name, param in MLA_model.low_d_readin_t.named_parameters():
+        if param.grad is not None:
+            print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
+        else:
+            print(f"{name} grad is None")
 
     total_loss = output_sh_loss
 
@@ -225,7 +239,15 @@ for epoch in range(n_epochs):
 
     # print if the param low_d_readin_t in MLA_model has nan:
     print(3)
-    print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+    print("low_d_readin_t nan: ",
+          {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+    # check gradients
+    print(3.1)
+    for name, param in MLA_model.low_d_readin_t.named_parameters():
+        if param.grad is not None:
+            print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
+        else:
+            print(f"{name} grad is None")
 
     batch_size = latents_k.shape[0]
     t = torch.randint(0, timesteps, (batch_size,), device=device).long()
@@ -233,7 +255,16 @@ for epoch in range(n_epochs):
 
     # print if the param low_d_readin_t in MLA_model has nan:
     print(4)
-    print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+    print("low_d_readin_t nan: ",
+          {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+
+    # Check gradients
+    print(4.1)
+    for name, param in MLA_model.low_d_readin_t.named_parameters():
+        if param.grad is not None:
+            print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
+        else:
+            print(f"{name} grad is None")
 
     z_noisy = q_sample(x_start=latents_k, t=t, noise=noise).to(device)
     predicted_noise = diff_model(z_noisy, t)
@@ -241,19 +272,25 @@ for epoch in range(n_epochs):
 
     # print if the param low_d_readin_t in MLA_model has nan:
     print(5)
-    print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
-
-    # print if the param low_d_readin_t in MLA_model has nan:
-    print(6)
-    print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+    print("low_d_readin_t nan: ",
+          {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+    # check gradients
+    print(5.1)
+    for name, param in MLA_model.low_d_readin_t.named_parameters():
+        if param.grad is not None:
+            print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
+        else:
+            print(f"{name} grad is None")
 
     total_loss += skilling_divergence(z_noisy, latents_k, t)
 
     # print if the param low_d_readin_t in MLA_model has nan:
     print(7)
-    print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+    print("low_d_readin_t nan: ",
+          {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
 
     # Check gradients
+    print(7.1)
     for name, param in MLA_model.low_d_readin_t.named_parameters():
         if param.grad is not None:
             print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
@@ -267,7 +304,8 @@ for epoch in range(n_epochs):
 
     # print if the param low_d_readin_t in MLA_model has nan:
     print(8)
-    print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+    print("low_d_readin_t nan: ",
+          {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
 
     with torch.no_grad():
         if (epoch % 5 == 0) or (epoch == n_epochs - 1):
@@ -278,7 +316,8 @@ for epoch in range(n_epochs):
 
             logger.info("Epoch:" + str(epoch))
             current_metric = float(logger_performance(MLA_model))
-            print("Epoch:" + str(epoch), " loss: ", round(total_loss.item(), 3), " metric: ", round(current_metric, 3), end="  ")
+            print("Epoch:" + str(epoch), " loss: ", round(total_loss.item(), 3), " metric: ", round(current_metric, 3),
+                  end="  ")
             if current_metric > key_metric:
                 key_metric = current_metric
             if total_loss < pre_total_loss_:
