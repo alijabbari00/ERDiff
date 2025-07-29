@@ -188,6 +188,12 @@ class VAE_MLA_Model(nn.Module):
             print("M/M.max() has neginf: ", torch.isneginf(M/M.max()).any())
         if torch.isnan(ot.sinkhorn2(torch.squeeze(p), torch.squeeze(q), M / M.max(), reg=0.01)).any():
             print("ot.sinkhorn2 has nan: ", torch.isnan(ot.sinkhorn2(torch.squeeze(p), torch.squeeze(q), M / M.max(), reg=0.01)).any())
+        print("max M:", M.max().item())
+        print("max M/M.max():", (M / M.max()).max().item())
+        print("max ot.sinkhorn2:", (ot.sinkhorn2(torch.squeeze(p), torch.squeeze(q), M / M.max(), reg=0.01)).max().item())
+        print("min M:", M.min().item())
+        print("min M/M.max():", (M / M.max()).min().item())
+        print("min ot.sinkhorn2:", (ot.sinkhorn2(torch.squeeze(p), torch.squeeze(q), M / M.max(), reg=0.01)).min().item())
         sh_d = ot.sinkhorn2(torch.squeeze(p), torch.squeeze(q), M / M.max(), reg=0.01)  # exact linear program
 
         # Spike Decoder
