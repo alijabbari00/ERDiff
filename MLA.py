@@ -236,7 +236,7 @@ MLA_model.to(device)
 
 with torch.no_grad():
     _, _, _, _, test_latents, _, _ = MLA_model(spike_train, spike_test, p, q_test, train_flag=False)
-test_latents = np.array(test_latents)
+test_latents = np.array(test_latents.cpu())
 np.save("./npy_files/test_latents.npy", test_latents)
 
 vanilla_model_dict = torch.load('model_checkpoints/vae_model_mla')
