@@ -209,7 +209,6 @@ for epoch in range(n_epochs):
 
     if total_loss < pre_loss:
         pre_loss = total_loss
-        # torch.save(dm_model.state_dict(), f'../model_checkpoints/source_diffusion_model_public_{timesteps}.pth')
         torch.save(dm_model.state_dict(), f'../model_checkpoints/source_diffusion_model.pth')
 
 # ema.apply(dm_model)

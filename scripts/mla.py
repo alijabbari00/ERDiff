@@ -168,9 +168,9 @@ exp_name = f'ERDiff_MLA_{timestamp}'
 current_metric = float(logger_performance(MLA_model, spike_day_0, spike_day_k, p, q_test, test_trial_vel))
 print("current_metric for the previously saved model is: ", current_metric)
 
-should_continue = input("Do you want to continue training the model? (yes/no): ")
-if should_continue.lower() == 'no':
-    exit()
+# should_continue = input("Do you want to continue training the model? (yes/no): ")
+# if should_continue.lower() == 'no':
+#     exit()
 
 # Maximum Likelihood Alignment
 
