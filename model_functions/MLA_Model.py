@@ -161,8 +161,6 @@ class VAE_MLA_Model(nn.Module):
             z_k = mu_x_k
 
         print("z_k has nan: ", torch.isnan(z_k).any())
-        if torch.isnan(z_k).any():
-            print(z_k)
 
         latent_states_x_k_tide = z_k.reshape((z_k.shape[0], -1))
 

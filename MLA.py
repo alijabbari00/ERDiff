@@ -195,6 +195,12 @@ def logger_performance(model):
     return key_metric
 
 
+# print every parameter in optimizer, and whether it needs grad:
+print(0)
+for param in optimizer.param_groups[0]['params']:
+    print(param, param.requires_grad)
+
+
 # Maximum Likelihood Alignment
 best_r2 = -1000
 for epoch in range(n_epochs):
