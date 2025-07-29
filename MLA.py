@@ -215,7 +215,7 @@ for epoch in range(n_epochs):
     optimizer.step()
 
     with torch.no_grad():
-        if (epoch > 0 and epoch % 5 == 0) or (epoch == n_epochs - 1):
+        if (epoch > 5 and epoch % 5 == 0) or (epoch == n_epochs - 1):
             logger.info("Epoch:" + str(epoch))
             current_metric = float(logger_performance(MLA_model))
             print("Epoch:" + str(epoch), " loss: ", round(total_loss.item(), 3), " metric: ", round(current_metric, 3), end="  ")
