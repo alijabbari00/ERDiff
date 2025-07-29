@@ -232,8 +232,7 @@ for epoch in range(n_epochs):
 
     print(f"Loss: {total_loss.item()}")
 
-    with torch.autograd.set_detect_anomaly(True):
-        total_loss.backward(retain_graph=True)
+    total_loss.backward(retain_graph=True)
     optimizer.step()
 
     # print if the param low_d_readin_t in MLA_model has nan:
