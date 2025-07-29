@@ -247,6 +247,15 @@ for epoch in range(n_epochs):
     print(7)
     print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
 
+    # Check gradients
+    for name, param in MLA_model.low_d_readin_t.named_parameters():
+        if param.grad is not None:
+            print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
+        else:
+            print(f"{name} grad is None")
+
+    print(f"Loss: {total_loss.item()}")
+
     total_loss.backward(retain_graph=True)
     optimizer.step()
 
