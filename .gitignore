@@ -1,0 +1,4 @@
+.venv
+model_checkpoints_bkup
+.idea
+train.log
