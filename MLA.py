@@ -197,6 +197,7 @@ for name, param in MLA_model.named_parameters():
         in_optimizer = any(param is p for group in optimizer.param_groups for p in group['params'])
         if in_optimizer:
             print(name)
+param_to_name = {param: name for name, param in MLA_model.named_parameters()}
 
 # Maximum Likelihood Alignment
 best_r2 = -1000
@@ -274,6 +275,11 @@ for epoch in range(n_epochs):
             print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
         else:
             print(f"{name} grad is None")
+    for group in optimizer.param_groups:
+        for param in group['params']:
+            if param.requires_grad:
+                name = param_to_name.get(param, '<no_name>')
+                print(f"{name}: requires_grad={param.requires_grad}, grad_is_None={param.grad is None}")
 
     print(f"Loss: {total_loss.item()}")
 
@@ -284,6 +290,18 @@ for epoch in range(n_epochs):
     print(8)
     print("low_d_readin_t nan: ",
           {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+
+    print(8.1)
+    for name, param in MLA_model.low_d_readin_t.named_parameters():
+        if param.grad is not None:
+            print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
+        else:
+            print(f"{name} grad is None")
+    for group in optimizer.param_groups:
+        for param in group['params']:
+            if param.requires_grad:
+                name = param_to_name.get(param, '<no_name>')
+                print(f"{name}: requires_grad={param.requires_grad}, grad_is_None={param.grad is None}")
 
     exit(0)
 
