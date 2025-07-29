@@ -176,12 +176,22 @@ class VAE_MLA_Model(nn.Module):
         # Velocity Decoder
         vel_latent = z_k
         vel_hat_minus_0 = self.vde_fc_minus_0(vel_latent)
+        print("vel_hat_minus_0 has nan: ", torch.isnan(vel_hat_minus_0).any())
+        if torch.isnan(vel_hat_minus_0).any():
+            print("vel_hat_minus_0: ", vel_hat_minus_0)
         vel_hat_minus_1 = self.vde_fc_minus_1(vel_latent)
         vel_hat_minus_2 = self.vde_fc_minus_2(vel_latent)
 
         vel_hat = torch.zeros_like(vel_hat_minus_0)
+        print("vel_hat has nan: ", torch.isnan(vel_hat).any())
+        if torch.isnan(vel_hat).any():
+            print("vel_hat: ", vel_hat)
 
         for i in range(len_trial):
             vel_hat[:, i, :] += vel_hat_minus_0[:, i, :]
+
+        print("2. vel_hat has nan: ", torch.isnan(vel_hat).any())
+        if torch.isnan(vel_hat).any():
+            print("2. vel_hat: ", vel_hat)
 
         return re_sp, vel_hat, dist_0, dist_k, mu_x_k, sh_d, log_var_k
