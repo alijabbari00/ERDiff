@@ -203,35 +203,64 @@ for epoch in range(n_epochs):
 
     # print if the param low_d_readin_t in MLA_model has nan:
     print(1)
-    print("low_d_readin_t nan: ", torch.isnan(MLA_model.low_d_readin_t).any())
+    print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
 
     re_sp, _, distri_0, distri_k, latents_k, output_sh_loss, log_var = MLA_model(spike_day_0, spike_day_k, p, q,
                                                                                  train_flag=True)
 
     # print if the param low_d_readin_t in MLA_model has nan:
-    print("low_d_readin_t nan: ", torch.isnan(MLA_model.low_d_readin_t).any())
     print(2)
+    print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
 
     total_loss = output_sh_loss
 
     latents_k = latents_k[:, None, :, :]
     latents_k = torch.transpose(latents_k, 3, 2)
 
+    # print if the param low_d_readin_t in MLA_model has nan:
+    print(3)
+    print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+
     batch_size = latents_k.shape[0]
     t = torch.randint(0, timesteps, (batch_size,), device=device).long()
     noise = torch.randn_like(latents_k).to(device)
+
+    # print if the param low_d_readin_t in MLA_model has nan:
+    print(4)
+    print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
 
     z_noisy = q_sample(x_start=latents_k, t=t, noise=noise).to(device)
     predicted_noise = diff_model(z_noisy, t)
     total_loss += appro_alpha * F.smooth_l1_loss(noise, predicted_noise)
 
+    # print if the param low_d_readin_t in MLA_model has nan:
+    print(5)
+    print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+
+    # print if the param low_d_readin_t in MLA_model has nan:
+    print(6)
+    print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+
     total_loss += skilling_divergence(z_noisy, latents_k, t)
+
+    # print if the param low_d_readin_t in MLA_model has nan:
+    print(7)
+    print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
 
     total_loss.backward(retain_graph=True)
     optimizer.step()
 
+    # print if the param low_d_readin_t in MLA_model has nan:
+    print(8)
+    print("low_d_readin_t nan: ", {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+
     with torch.no_grad():
         if (epoch % 5 == 0) or (epoch == n_epochs - 1):
+            # print if the param low_d_readin_t in MLA_model has nan:
+            print(9)
+            print("low_d_readin_t nan: ",
+                  {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+
             logger.info("Epoch:" + str(epoch))
             current_metric = float(logger_performance(MLA_model))
             print("Epoch:" + str(epoch), " loss: ", round(total_loss.item(), 3), " metric: ", round(current_metric, 3), end="  ")

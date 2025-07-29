@@ -119,6 +119,11 @@ class VAE_MLA_Model(nn.Module):
         print("p has nan: ", torch.isnan(p).any())
         print("q has nan: ", torch.isnan(q).any())
 
+        # print if the param low_d_readin_t in MLA_model has nan:
+        print(999)
+        print("low_d_readin_t nan: ",
+              {key: torch.isnan(param).any() for key, param in self.low_d_readin_t.named_parameters()})
+
         # Encoder
         # x_0
         x_0 = self.low_d_readin_s(x_0)
