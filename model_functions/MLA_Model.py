@@ -76,9 +76,12 @@ class VAE_MLA_Model(nn.Module):
         """
         if torch.isnan(logvar).any() or torch.isinf(logvar).any():
             print("BAD logvar:", logvar)
+            print("-" * 200)
         if (0.5 * logvar).abs().max() > 5:  # exp(80) ~ 10**34, exp(1000) will overflow
             print("logvar too large! max abs:", (0.5 * logvar).abs().max().item())
+            print("-" * 200)
         logvar = torch.clamp(logvar, min=-5, max=5)
+        print("max logvar abs:", (0.5 * logvar).abs().max().item())
         std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
         return eps * std + mu
