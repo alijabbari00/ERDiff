@@ -9,6 +9,7 @@ from model_functions.ERDiff_utils import *
 from model_functions.MLA_Model import *
 from model_functions.VAE_Readout import *
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
 logger = logging.getLogger('train_logger')
 logger.setLevel(level=logging.INFO)
 handler = logging.FileHandler('train.log')
@@ -81,14 +82,13 @@ real_train_trial_spikes_stand = (real_train_trial_spikes_smed)
 val_trial_spikes_stand = (val_trial_spikes_smed)
 test_trial_spikes_stand = (test_trial_spikes_smoothed)
 
-spike_train = Variable(torch.from_numpy(real_train_trial_spikes_stand)).float()
-spike_val = Variable(torch.from_numpy(val_trial_spikes_stand)).float()
-spike_test = Variable(torch.from_numpy(test_trial_spikes_stand)).float()
+spike_train = Variable(torch.from_numpy(real_train_trial_spikes_stand)).float().to(device)
+spike_val = Variable(torch.from_numpy(val_trial_spikes_stand)).float().to(device)
+spike_test = Variable(torch.from_numpy(test_trial_spikes_stand)).float().to(device)
 
 timesteps = 50
 eps = 1 / timesteps
 channels = 1
-device = "cuda" if torch.cuda.is_available() else "cpu"
 
 input_dim = 1
 
