@@ -74,7 +74,11 @@ class VAE_MLA_Model(nn.Module):
         :param logvar: (Tensor) Standard deviation of the latent Gaussian [B x D]
         :return: (Tensor) [B x D]
         """
+        print("the logvar is: ")
+        print(logvar)
         std = torch.exp(0.5 * logvar)
+        print("the std is: ")
+        print(std)
         eps = torch.randn_like(std)
         return eps * std + mu
 
