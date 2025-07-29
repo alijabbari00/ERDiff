@@ -1,31 +1,11 @@
-import math
-from inspect import isfunction
-from functools import partial
-
-import matplotlib.pyplot as plt
-from tqdm.auto import tqdm
-from einops import rearrange
-
 import torch
-from torch import nn, einsum
-import torch.nn.functional as F
+from torch import nn
 
-import numpy as np
-import scipy.io as sio
-import matplotlib.pyplot as plt
-import os
-import sys
-from tqdm import tqdm_notebook
+len_trial, num_neurons = 37, 187
 
-
-from torch.optim import Adam
-
-import numpy as np
-
-len_trial,num_neurons = 37, 187
-
-start_pos = 1 
+start_pos = 1
 end_pos = 1
+
 
 class VAE_Model(nn.Module):
     def __init__(self):
@@ -35,19 +15,19 @@ class VAE_Model(nn.Module):
         self.low_dim = 64
         self.latent_dim = 8
         self.vel_dim = 2
-        self.encoder_n_layers, self.decoder_n_layers = 2,1
-        self.hidden_dims = [64,32]
+        self.encoder_n_layers, self.decoder_n_layers = 2, 1
+        self.hidden_dims = [64, 32]
 
         # Low-D Readin
-        self.low_d_readin_s = nn.Linear(self.spike_dim,self.low_dim, bias = False)
+        self.low_d_readin_s = nn.Linear(self.spike_dim, self.low_dim, bias=False)
 
         # Encoder Structure
         self.encoder_rnn = nn.RNN(self.low_dim, self.hidden_dims[0], self.encoder_n_layers,
-         bidirectional= False, nonlinearity = 'tanh', batch_first = True)
+                                  bidirectional=False, nonlinearity='tanh', batch_first=True)
         for name, param in self.encoder_rnn.named_parameters():
             if len(param.shape) > 1:
-                nn.init.xavier_uniform_(param,0.1)
-        
+                nn.init.xavier_uniform_(param, 0.1)
+
         # self.encoder_rnn_bn = nn.BatchNorm1d(len_trial)
 
         self.fc_mu_1 = nn.Linear(self.hidden_dims[0], self.latent_dim)
@@ -56,10 +36,9 @@ class VAE_Model(nn.Module):
         self.fc_log_var_1 = nn.Linear(self.hidden_dims[0], self.latent_dim)
         # self.fc_log_var_2 = nn.Linear(self.hidden_dims[-1], self.latent_dim)
 
-
         # Spike Decoder Structure
-        self.sde_rnn = nn.RNN(self.latent_dim, self.latent_dim, self.decoder_n_layers, bidirectional= False,
-         nonlinearity = 'tanh', batch_first = True)
+        self.sde_rnn = nn.RNN(self.latent_dim, self.latent_dim, self.decoder_n_layers, bidirectional=False,
+                              nonlinearity='tanh', batch_first=True)
 
         # self.sde_rnn_bn = nn.BatchNorm1d(len_trial)
 
@@ -67,19 +46,19 @@ class VAE_Model(nn.Module):
         self.sde_fc2 = nn.Linear(self.hidden_dims[0], self.spike_dim)
 
         # Velocity Decoder Structure
-        self.vde_rnn = nn.RNN(self.latent_dim, self.latent_dim, self.decoder_n_layers, bidirectional= False,
-         nonlinearity = 'tanh', batch_first = True)
+        self.vde_rnn = nn.RNN(self.latent_dim, self.latent_dim, self.decoder_n_layers, bidirectional=False,
+                              nonlinearity='tanh', batch_first=True)
         for name, param in self.vde_rnn.named_parameters():
             if len(param.shape) > 1:
-                nn.init.xavier_uniform_(param,0.1)
+                nn.init.xavier_uniform_(param, 0.1)
 
-        self.vde_fc_minus_0 = nn.Linear(self.latent_dim, 2, bias = False)
-        self.vde_fc_minus_1 = nn.Linear(self.latent_dim, 2, bias = False)
-        self.vde_fc_minus_2 = nn.Linear(self.latent_dim, 2, bias = False)
+        self.vde_fc_minus_0 = nn.Linear(self.latent_dim, 2, bias=False)
+        self.vde_fc_minus_1 = nn.Linear(self.latent_dim, 2, bias=False)
+        self.vde_fc_minus_2 = nn.Linear(self.latent_dim, 2, bias=False)
 
         self.elu = nn.ELU()
         self.softplus = nn.Softplus()
-        
+
     def reparameterize(self, mu, logvar):
         """
         Reparameterization trick to sample from N(mu, var) from
@@ -124,7 +103,7 @@ class VAE_Model(nn.Module):
         vel_hat = torch.zeros_like(vel_hat_minus_0)
 
         for i in range(len_trial - start_pos):
-            vel_hat[:,i,:] += vel_hat_minus_0[:,i,:]
+            vel_hat[:, i, :] += vel_hat_minus_0[:, i, :]
             # if i > 0:
             #     vel_hat[:,i,:] += vel_hat_minus_1[:,i-1,:]
             # if i > 1:

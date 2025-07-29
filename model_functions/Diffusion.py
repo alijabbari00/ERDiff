@@ -1,29 +1,10 @@
 import math
-from inspect import isfunction
-from functools import partial
-
-import matplotlib.pyplot as plt
-from tqdm.auto import tqdm
-from einops import rearrange
 
 import torch
-from torch import nn, einsum
 import torch.nn.functional as F
+from torch import nn
 
-import numpy as np
-import scipy.io as sio
-import matplotlib.pyplot as plt
-import os
-import sys
-from tqdm import tqdm_notebook
-
-
-from torch.optim import Adam
-
-import numpy as np
-
-
-diff_layers = 2 
+diff_layers = 2
 diff_channels = 16
 diff_nheads = 4
 diff_embedding_dim = 32
@@ -31,6 +12,7 @@ diff_beta_start = 0.0001
 diff_beta_end = 0.5
 diff_num_steps = 50
 diff_cond_dim = 144
+
 
 def get_torch_trans(heads=8, layers=1, channels=64):
     encoder_layer = nn.TransformerEncoderLayer(
@@ -43,6 +25,7 @@ def Conv1d_with_init(in_channels, out_channels, kernel_size):
     layer = nn.Conv1d(in_channels, out_channels, kernel_size)
     nn.init.kaiming_normal_(layer.weight)
     return layer
+
 
 class DiffusionEmbedding(nn.Module):
     def __init__(self, num_steps, embedding_dim=128, projection_dim=None):
@@ -66,10 +49,10 @@ class DiffusionEmbedding(nn.Module):
         return x
 
     def _build_embedding(self, num_steps, dim=64):
-        steps = torch.arange(num_steps).unsqueeze(1)  
-        frequencies = 10.0 ** (torch.arange(dim) / (dim - 1) * 4.0).unsqueeze(0) 
-        table = steps * frequencies  
-        table = torch.cat([torch.sin(table), torch.cos(table)], dim=1)  
+        steps = torch.arange(num_steps).unsqueeze(1)
+        frequencies = 10.0 ** (torch.arange(dim) / (dim - 1) * 4.0).unsqueeze(0)
+        table = steps * frequencies
+        table = torch.cat([torch.sin(table), torch.cos(table)], dim=1)
         return table
 
 
@@ -116,9 +99,9 @@ class diff_STBlock(nn.Module):
 
         x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.STBlock_layers))
         x = x.reshape(B, self.channels, K * L)
-        x = self.output_projection1(x)  
+        x = self.output_projection1(x)
         x = F.relu(x)
-        x = self.output_projection2(x) 
+        x = self.output_projection2(x)
         x = x.reshape(B, 1, K, L)
         return x
 
@@ -153,15 +136,15 @@ class STBlock(nn.Module):
         base_shape = x.shape
         x = x.reshape(B, channel, K * L)
 
-        diffusion_emb = self.diffusion_projection(diffusion_emb).unsqueeze(-1)  
+        diffusion_emb = self.diffusion_projection(diffusion_emb).unsqueeze(-1)
         y = x + diffusion_emb
 
         y = self.forward_temporal(y, base_shape)
-        y = self.forward_spatio(y, base_shape) 
-        y = self.mid_projection(y)  
+        y = self.forward_spatio(y, base_shape)
+        y = self.mid_projection(y)
 
         gate, filter = torch.chunk(y, 2, dim=1)
-        y = torch.sigmoid(gate) * torch.tanh(filter)  
+        y = torch.sigmoid(gate) * torch.tanh(filter)
         y = self.output_projection(y)
 
         residual, skip = torch.chunk(y, 2, dim=1)
@@ -171,12 +154,10 @@ class STBlock(nn.Module):
         return (x + residual) / math.sqrt(2.0), skip
 
 
-
 def quadratic_beta_schedule(timesteps):
     beta_start = 0.0001
     beta_end = 0.5
-    return torch.linspace(beta_start**0.5, beta_end**0.5, timesteps) ** 2
-
+    return torch.linspace(beta_start ** 0.5, beta_end ** 0.5, timesteps) ** 2
 
 
 # define beta schedule
@@ -195,12 +176,12 @@ sqrt_one_minus_alphas_cumprod = torch.sqrt(1. - alphas_cumprod)
 # calculations for posterior q(x_{t-1} | x_t, x_0)
 posterior_variance = betas * (1. - alphas_cumprod_prev) / (1. - alphas_cumprod)
 
+
 def extract(a, t, x_shape):
     batch_size = t.shape[0]
     out = a.gather(-1, t.cpu())
     return out.reshape(batch_size, *((1,) * (len(x_shape) - 1))).to(t.device)
 
-from torchvision.transforms import Compose, ToTensor, Lambda, ToPILImage, CenterCrop, Resize
 
 # forward diffusion (using the nice property)
 def q_sample(x_start, t, noise=None):
@@ -211,9 +192,10 @@ def q_sample(x_start, t, noise=None):
     sqrt_one_minus_alphas_cumprod_t = extract(
         sqrt_one_minus_alphas_cumprod, t, x_start.shape
     )
-#     print(sqrt_alphas_cumprod_t)
-#     print(sqrt_one_minus_alphas_cumprod_t)
+    #     print(sqrt_alphas_cumprod_t)
+    #     print(sqrt_one_minus_alphas_cumprod_t)
     return sqrt_alphas_cumprod_t * x_start + sqrt_one_minus_alphas_cumprod_t * noise
+
 
 def p_losses(denoise_model, x_start, t, noise=None):
     if noise is None:
