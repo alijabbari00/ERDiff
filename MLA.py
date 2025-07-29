@@ -169,14 +169,14 @@ MLA_model.to(device)
 epoches = 300
 test_trial_spikes_stand_half_len = len(test_trial_spikes_stand) // 2
 
-spike_day_0 = Variable(torch.from_numpy(real_train_trial_spikes_stand)).float()
-spike_day_k = Variable(torch.from_numpy(test_trial_spikes_stand[:test_trial_spikes_stand_half_len])).float()
+spike_day_0 = Variable(torch.from_numpy(real_train_trial_spikes_stand)).float().to(device)
+spike_day_k = Variable(torch.from_numpy(test_trial_spikes_stand[:test_trial_spikes_stand_half_len])).float().to(device)
 
 num_x, num_y, num_y_test = spike_day_0.shape[0], spike_day_k.shape[0], test_trial_spikes_stand.shape[0]
 
-p = Variable(torch.from_numpy(np.full((num_x, 1), 1 / num_x))).float()
-q = Variable(torch.from_numpy(np.full((num_y, 1), 1 / num_y))).float()
-q_test = Variable(torch.from_numpy(np.full((num_y_test, 1), 1 / num_y_test))).float()
+p = Variable(torch.from_numpy(np.full((num_x, 1), 1 / num_x))).float().to(device)
+q = Variable(torch.from_numpy(np.full((num_y, 1), 1 / num_y))).float().to(device)
+q_test = Variable(torch.from_numpy(np.full((num_y_test, 1), 1 / num_y_test))).float().to(device)
 
 
 def logger_performance(model):
