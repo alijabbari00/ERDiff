@@ -190,7 +190,6 @@ def logger_performance(model):
     # print if inputs to the following have nan:
     print("test trial vel nan: ", np.isnan(test_trial_vel_tide).any())
     print("vel_hat_test nan: ", torch.isnan(vel_hat_test).any())
-    print(vel_hat_test)
     key_metric = 100 * r2_score(test_trial_vel_tide.reshape((-1, 2)), vel_hat_test.reshape((-1, 2)).cpu(),
                                 multioutput='uniform_average')
     return key_metric
@@ -202,8 +201,16 @@ for epoch in range(n_epochs):
 
     optimizer.zero_grad()
 
+    # print if the param low_d_readin_t in MLA_model has nan:
+    print(1)
+    print("low_d_readin_t nan: ", torch.isnan(MLA_model.low_d_readin_t).any())
+
     re_sp, _, distri_0, distri_k, latents_k, output_sh_loss, log_var = MLA_model(spike_day_0, spike_day_k, p, q,
                                                                                  train_flag=True)
+
+    # print if the param low_d_readin_t in MLA_model has nan:
+    print("low_d_readin_t nan: ", torch.isnan(MLA_model.low_d_readin_t).any())
+    print(2)
 
     total_loss = output_sh_loss
 

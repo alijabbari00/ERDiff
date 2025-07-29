@@ -113,18 +113,11 @@ class VAE_MLA_Model(nn.Module):
         return (trace_term + mean_term).float()
 
     def forward(self, x_0, x_k, p, q, train_flag):
+        print('\n')
         print("x_0 has nan: ", torch.isnan(x_0).any())
-        if torch.isnan(x_0).any():
-            print(x_0)
         print("x_k has nan: ", torch.isnan(x_k).any())
-        if torch.isnan(x_k).any():
-            print(x_k)
         print("p has nan: ", torch.isnan(p).any())
-        if torch.isnan(p).any():
-            print(p)
         print("q has nan: ", torch.isnan(q).any())
-        if torch.isnan(q).any():
-            print(q)
 
         # Encoder
         # x_0
@@ -139,8 +132,6 @@ class VAE_MLA_Model(nn.Module):
             z_0 = mu_x_0
 
         print("z_0 has nan: ", torch.isnan(z_0).any())
-        if torch.isnan(z_0).any():
-            print(z_0)
 
         latent_states_x_0_tide = z_0.reshape((z_0.shape[0], -1))
 
@@ -151,29 +142,13 @@ class VAE_MLA_Model(nn.Module):
         log_var_k = self.fc_log_var_1(rnn_states_x_k)
 
         print("x_k_al has nan: ", torch.isnan(x_k_al).any())
-        if torch.isnan(x_k_al).any():
-            print(x_k_al)
         print("rnn_states_x_k has nan: ", torch.isnan(rnn_states_x_k).any())
-        if torch.isnan(rnn_states_x_k).any():
-            print(rnn_states_x_k)
         print("mu_x_k has nan: ", torch.isnan(mu_x_k).any())
-        if torch.isnan(mu_x_k).any():
-            print(mu_x_k)
         print("log_var_k has nan: ", torch.isnan(log_var_k).any())
-        if torch.isnan(log_var_k).any():
-            print(log_var_k)
         print("self.low_d_readin_t has nan in any sub-param: ", {key: torch.isnan(param).any() for key, param in self.low_d_readin_t.named_parameters()})
-        if any([torch.isnan(param).any() for param in self.low_d_readin_t.parameters()]):
-            print(self.low_d_readin_t.parameters())
         print("self.encoder_rnn has nan in any sub-param: ", [torch.isnan(param).any() for param in self.encoder_rnn.parameters()])
-        if any([torch.isnan(param).any() for param in self.encoder_rnn.parameters()]):
-            print(self.encoder_rnn.parameters())
         print("self.fc_mu_1 has nan in any sub-param: ", [torch.isnan(param).any() for param in self.fc_mu_1.parameters()])
-        if any([torch.isnan(param).any() for param in self.fc_mu_1.parameters()]):
-            print(self.fc_mu_1.parameters())
         print("self.fc_log_var_1 has nan in any sub-param: ", [torch.isnan(param).any() for param in self.fc_log_var_1.parameters()])
-        if any([torch.isnan(param).any() for param in self.fc_log_var_1.parameters()]):
-            print(self.fc_log_var_1.parameters())
 
         if train_flag:
             z_k = self.reparameterize(mu_x_k, log_var_k)
@@ -206,19 +181,13 @@ class VAE_MLA_Model(nn.Module):
         vel_latent = z_k
         vel_hat_minus_0 = self.vde_fc_minus_0(vel_latent)
         print("vel_hat_minus_0 has nan: ", torch.isnan(vel_hat_minus_0).any())
-        if torch.isnan(vel_hat_minus_0).any():
-            print("vel_hat_minus_0: ", vel_hat_minus_0)
 
         vel_hat = torch.zeros_like(vel_hat_minus_0)
         print("vel_hat has nan: ", torch.isnan(vel_hat).any())
-        if torch.isnan(vel_hat).any():
-            print("vel_hat: ", vel_hat)
 
         for i in range(len_trial):
             vel_hat[:, i, :] += vel_hat_minus_0[:, i, :]
 
         print("2. vel_hat has nan: ", torch.isnan(vel_hat).any())
-        if torch.isnan(vel_hat).any():
-            print("2. vel_hat: ", vel_hat)
 
         return re_sp, vel_hat, dist_0, dist_k, mu_x_k, sh_d, log_var_k
