@@ -182,6 +182,9 @@ def logger_performance(model):
     re_sp_test, vel_hat_test, _, _, _, _, _ = model(spike_train, spike_test, p, q_test, train_flag=False)
 
     sys.stdout.flush()
+    # print if inputs to the following have nan:
+    print("test trial vel nan: ", np.isnan(test_trial_vel_tide).any())
+    print("vel_hat_test nan: ", torch.isnan(vel_hat_test).any())
     key_metric = 100 * r2_score(test_trial_vel_tide.reshape((-1, 2)), vel_hat_test.reshape((-1, 2)).cpu(),
                                 multioutput='uniform_average')
     return key_metric
