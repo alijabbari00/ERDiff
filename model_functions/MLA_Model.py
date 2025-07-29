@@ -74,11 +74,12 @@ class VAE_MLA_Model(nn.Module):
         :param logvar: (Tensor) Standard deviation of the latent Gaussian [B x D]
         :return: (Tensor) [B x D]
         """
-        print("the logvar is: ")
-        print(logvar)
+        if torch.isnan(logvar).any() or torch.isinf(logvar).any():
+            print("BAD logvar:", logvar)
+        if (0.5 * logvar).abs().max() > 80:  # exp(80) ~ 10**34, exp(1000) will overflow
+            print("logvar too large! max abs:", (0.5 * logvar).abs().max().item())
+        logvar = torch.clamp(logvar, min=-20, max=20)
         std = torch.exp(0.5 * logvar)
-        print("the std is: ")
-        print(std)
         eps = torch.randn_like(std)
         return eps * std + mu
 
