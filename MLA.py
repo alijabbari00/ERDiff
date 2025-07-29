@@ -205,61 +205,21 @@ for epoch in range(n_epochs):
 
     optimizer.zero_grad()
 
-    # check gradients
-    print(1.1)
-    for name, param in MLA_model.low_d_readin_t.named_parameters():
-        if param.grad is not None:
-            print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
-        else:
-            print(f"{name} grad is None")
-
     re_sp, _, distri_0, distri_k, latents_k, output_sh_loss, log_var = MLA_model(spike_day_0, spike_day_k, p, q,
                                                                                  train_flag=True)
-
-    # check gradients
-    print(2.1)
-    for name, param in MLA_model.low_d_readin_t.named_parameters():
-        if param.grad is not None:
-            print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
-        else:
-            print(f"{name} grad is None")
 
     total_loss = output_sh_loss
 
     latents_k = latents_k[:, None, :, :]
     latents_k = torch.transpose(latents_k, 3, 2)
 
-    # check gradients
-    print(3.1)
-    for name, param in MLA_model.low_d_readin_t.named_parameters():
-        if param.grad is not None:
-            print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
-        else:
-            print(f"{name} grad is None")
-
     batch_size = latents_k.shape[0]
     t = torch.randint(0, timesteps, (batch_size,), device=device).long()
     noise = torch.randn_like(latents_k).to(device)
 
-    # Check gradients
-    print(4.1)
-    for name, param in MLA_model.low_d_readin_t.named_parameters():
-        if param.grad is not None:
-            print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
-        else:
-            print(f"{name} grad is None")
-
     z_noisy = q_sample(x_start=latents_k, t=t, noise=noise).to(device)
     predicted_noise = diff_model(z_noisy, t)
     total_loss += appro_alpha * F.smooth_l1_loss(noise, predicted_noise)
-
-    # check gradients
-    print(5.1)
-    for name, param in MLA_model.low_d_readin_t.named_parameters():
-        if param.grad is not None:
-            print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
-        else:
-            print(f"{name} grad is None")
 
     total_loss += skilling_divergence(z_noisy, latents_k, t)
 
@@ -267,19 +227,6 @@ for epoch in range(n_epochs):
     print(7)
     print("low_d_readin_t nan: ",
           {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
-
-    # Check gradients
-    print(7.1)
-    for name, param in MLA_model.low_d_readin_t.named_parameters():
-        if param.grad is not None:
-            print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
-        else:
-            print(f"{name} grad is None")
-    for group in optimizer.param_groups:
-        for param in group['params']:
-            if param.requires_grad:
-                name = param_to_name.get(param, '<no_name>')
-                print(f"{name}: requires_grad={param.requires_grad}, grad_is_None={param.grad is None}")
 
     print(f"Loss: {total_loss.item()}")
 
