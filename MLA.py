@@ -128,10 +128,6 @@ for key in vanilla_model_dict_keys:
 
 MLA_model.load_state_dict(MLA_dict_new)
 
-for key in MLA_model.state_dict().keys():
-    # print if the key has nan:
-    print(key, torch.isnan(MLA_model.state_dict()[key]).any())
-
 pre_total_loss_ = 1e18
 l_rate = 1e-3
 total_loss_list_ = []
@@ -187,7 +183,6 @@ def logger_performance(model):
 
     sys.stdout.flush()
     # print if inputs to the following have nan:
-    print("test trial vel nan: ", np.isnan(test_trial_vel_tide).any())
     print("vel_hat_test nan: ", torch.isnan(vel_hat_test).any())
     key_metric = 100 * r2_score(test_trial_vel_tide.reshape((-1, 2)), vel_hat_test.reshape((-1, 2)).cpu(),
                                 multioutput='uniform_average')
@@ -310,6 +305,8 @@ for epoch in range(n_epochs):
     print(8)
     print("low_d_readin_t nan: ",
           {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+
+    exit(0)
 
     with torch.no_grad():
         if (epoch % 5 == 0) or (epoch == n_epochs - 1):
