@@ -215,17 +215,16 @@ for epoch in range(n_epochs):
     optimizer.step()
 
     with torch.no_grad():
-        if (epoch % 5 == 0) or (epoch == n_epochs - 1):
+        if (epoch > 0 and epoch % 5 == 0) or (epoch == n_epochs - 1):
             logger.info("Epoch:" + str(epoch))
-            print("Epoch:" + str(epoch), " loss: ", round(total_loss.item(), 3), end="  ")
             current_metric = float(logger_performance(MLA_model))
+            print("Epoch:" + str(epoch), " loss: ", round(total_loss.item(), 3), " metric: ", round(current_metric, 3), end="  ")
             if current_metric > key_metric:
                 key_metric = current_metric
             if total_loss < pre_total_loss_:
                 torch.save(MLA_model.state_dict(), 'model_checkpoints/vae_model_mla')
                 pre_total_loss_ = total_loss
 
-        if (epoch % 10 == 0) or (epoch == n_epochs - 1):
             _, _, _, _, test_latents, _, _ = MLA_model(spike_train, spike_test, p, q_test, train_flag=False)
             test_latents = np.array(test_latents.cpu())
             np.save("./npy_files/test_latents.npy", test_latents)
@@ -243,13 +242,10 @@ for epoch in range(n_epochs):
             VAE_Readout_model.cpu()
 
             r2, rmse = vel_cal(test_trial_vel_tide, VAE_Readout_model, test_latents)
-            print("Current R**2:", f"{str(r2):<6}", "--- Current RMSE:", f"{str(rmse):<6}", end="  ")
+            print("R**2:", f"{str(r2)[:6]}", "--- Current RMSE:", f"{str(rmse)[:6]}")
             if r2 > best_r2:
                 best_r2 = r2
                 best_rmse = rmse
-        if epoch % 5 == 0:
-            print()
 
         if (epoch % 50 == 0) or (epoch == n_epochs - 1):
-            print("Best metric: R**2:", f"{str(best_r2):<6}", "--- RMSE:", f"{str(best_rmse):<6}")
-
+            print("Best metric: R**2:", f"{str(best_r2)[:6]}", "--- RMSE:", f"{str(best_rmse)[:6]}")
