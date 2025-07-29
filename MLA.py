@@ -166,7 +166,6 @@ MLA_model.vde_fc_minus_0.weight.requires_grad = False
 
 MLA_model.to(device)
 
-epoches = 300
 test_trial_spikes_stand_half_len = len(test_trial_spikes_stand) // 2
 
 spike_day_0 = Variable(torch.from_numpy(real_train_trial_spikes_stand)).float().to(device)
@@ -189,8 +188,8 @@ def logger_performance(model):
 
 
 # Maximum Likelihood Alignment
-
-for epoch in range(epoches):
+best_r2 = -1000
+for epoch in range(n_epochs):
 
     optimizer.zero_grad()
 
@@ -217,9 +216,8 @@ for epoch in range(epoches):
 
     with torch.no_grad():
         if (epoch % 5 == 0) or (epoch == n_epochs - 1):
-            print(total_loss)
             logger.info("Epoch:" + str(epoch))
-            print("Epoch:" + str(epoch))
+            print("Epoch:" + str(epoch), " loss: ", total_loss.item())
             current_metric = float(logger_performance(MLA_model))
             if current_metric > key_metric:
                 key_metric = current_metric
@@ -227,31 +225,28 @@ for epoch in range(epoches):
                 torch.save(MLA_model.state_dict(), 'model_checkpoints/vae_model_mla')
                 pre_total_loss_ = total_loss
 
-        if (epoch % 20 == 0) or (epoch == n_epochs - 1):
-            vanilla_model_dict = torch.load('model_checkpoints/vae_model_mla')
-
-            VAE_MLA_model = VAE_MLA_Model()
-
-            VAE_MLA_model.load_state_dict(vanilla_model_dict)
-
-            VAE_MLA_model.to(device)
-
-            _, _, _, _, test_latents, _, _ = VAE_MLA_model(spike_train, spike_test, p, q_test, train_flag=False)
+        if (epoch % 10 == 0) or (epoch == n_epochs - 1):
+            _, _, _, _, test_latents, _, _ = MLA_model(spike_train, spike_test, p, q_test, train_flag=False)
             test_latents = np.array(test_latents.cpu())
             np.save("./npy_files/test_latents.npy", test_latents)
 
-            vanilla_model_dict = torch.load('model_checkpoints/vae_model_mla')
-
             VAE_Readout_model = VAE_Readout_Model()
             DL_dict_keys = VAE_Readout_model.state_dict().keys()
-            vanilla_model_dict_keys = vanilla_model_dict.keys()
+            vanilla_model_dict_keys = MLA_model.state_dict().keys()
 
             DL_dict_new = VAE_Readout_model.state_dict().copy()
 
             for key in vanilla_model_dict_keys:
-                DL_dict_new[key] = vanilla_model_dict[key]
+                DL_dict_new[key] = MLA_model.state_dict()[key]
 
             VAE_Readout_model.load_state_dict(DL_dict_new)
             VAE_Readout_model.cpu()
 
-            vel_cal(test_trial_vel_tide, VAE_Readout_model, test_latents)
+            r2, rmse = vel_cal(test_trial_vel_tide, VAE_Readout_model, test_latents)
+            print("Current R**2:" + str(r2), "--- Current RMSE:" + str(rmse))
+            if r2 > best_r2:
+                best_r2 = r2
+                best_rmse = rmse
+
+        if (epoch % 50 == 0) or (epoch == n_epochs - 1):
+            print("Best metric: R**2:", best_r2, "--- RMSE:", best_rmse)
