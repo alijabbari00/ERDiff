@@ -199,6 +199,8 @@ for name, param in MLA_model.named_parameters():
             print(name)
 param_to_name = {param: name for name, param in MLA_model.named_parameters()}
 
+torch.autograd.set_detect_anomaly(True)
+
 # Maximum Likelihood Alignment
 best_r2 = -1000
 for epoch in range(n_epochs):
