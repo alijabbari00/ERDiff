@@ -166,7 +166,7 @@ MLA_model.vde_fc_minus_0.weight.requires_grad = False
 
 MLA_model.to(device)
 
-epoches = 10
+epoches = 300
 test_trial_spikes_stand_half_len = len(test_trial_spikes_stand) // 2
 
 spike_day_0 = Variable(torch.from_numpy(real_train_trial_spikes_stand)).float().to(device)
