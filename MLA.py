@@ -217,7 +217,7 @@ for epoch in range(n_epochs):
     with torch.no_grad():
         if (epoch % 5 == 0) or (epoch == n_epochs - 1):
             logger.info("Epoch:" + str(epoch))
-            print("Epoch:" + str(epoch), " loss: ", total_loss.item())
+            print("Epoch:" + str(epoch), " loss: ", round(total_loss.item(), 3), end="  ")
             current_metric = float(logger_performance(MLA_model))
             if current_metric > key_metric:
                 key_metric = current_metric
@@ -243,10 +243,12 @@ for epoch in range(n_epochs):
             VAE_Readout_model.cpu()
 
             r2, rmse = vel_cal(test_trial_vel_tide, VAE_Readout_model, test_latents)
-            print("Current R**2:" + str(r2), "--- Current RMSE:" + str(rmse))
+            print("Current R**2:", round(r2, 3), "--- Current RMSE:" + round(rmse, 3), end="  ")
             if r2 > best_r2:
                 best_r2 = r2
                 best_rmse = rmse
+        print()
 
         if (epoch % 50 == 0) or (epoch == n_epochs - 1):
-            print("Best metric: R**2:", best_r2, "--- RMSE:", best_rmse)
+            print("Best metric: R**2:", round(best_r2, 3), "--- RMSE:", round(best_rmse, 3), end="  ")
+
