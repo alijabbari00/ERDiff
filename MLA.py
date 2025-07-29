@@ -247,8 +247,9 @@ for epoch in range(n_epochs):
             if r2 > best_r2:
                 best_r2 = r2
                 best_rmse = rmse
-        print()
+        if epoch % 5 == 0:
+            print()
 
         if (epoch % 50 == 0) or (epoch == n_epochs - 1):
-            print("Best metric: R**2:", f"{str(best_r2):<6}", "--- RMSE:", f"{str(best_rmse):<6}", end="  ")
+            print("Best metric: R**2:", f"{str(best_r2):<6}", "--- RMSE:", f"{str(best_rmse):<6}")
 
