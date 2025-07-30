@@ -81,7 +81,7 @@ class VAE_MLA_Model(nn.Module):
             print("logvar too large! max abs:", (0.5 * logvar).abs().max().item())
             print("-" * 200)
         logvar = torch.clamp(logvar, min=-5, max=5)
-        print("max logvar abs:", (0.5 * logvar).abs().max().item())
+        # print("max logvar abs:", (0.5 * logvar).abs().max().item())
         std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
         return eps * std + mu
