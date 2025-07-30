@@ -65,7 +65,6 @@ import torch.nn.functional as F
 import torch.nn as nn
 from torch.autograd import Variable
 import numpy as np
-from tqdm import tqdm_notebook
 
 n_steps = 1
 n_epochs = 500
@@ -186,7 +185,7 @@ pre_loss = 1e10
 
 from torch.utils.data import DataLoader
 
-for epoch in tqdm_notebook(range(n_epochs)):
+for epoch in range(n_epochs):
     spike_gen_obj = get_batches(real_train_trial_spikes_stand, batch_size)
     emg_gen_obj = get_batches(real_train_trial_vel_tide, batch_size)
     for ii in range(n_batches):

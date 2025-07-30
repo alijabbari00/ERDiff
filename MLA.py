@@ -217,6 +217,48 @@ for epoch in range(n_epochs):
 
     total_loss = output_sh_loss
 
+
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< todo remove undo!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    # print if the param low_d_readin_t in MLA_model has nan:
+    print(5)
+    print("low_d_readin_t nan: ",
+          {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+    print(5.1)
+    for name, param in MLA_model.low_d_readin_t.named_parameters():
+        if param.grad is not None:
+            print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
+        else:
+            print(f"{name} grad is None")
+    for group in optimizer.param_groups:
+        for param in group['params']:
+            if param.requires_grad:
+                name = param_to_name.get(param, '<no_name>')
+                print(f"{name}: requires_grad={param.requires_grad}, grad_is_None={param.grad is None}")
+
+    total_loss.backward(retain_graph=True)
+    optimizer.step()
+
+    # print if the param low_d_readin_t in MLA_model has nan:
+    print(6)
+    print("low_d_readin_t nan: ",
+          {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
+    print(6.1)
+    for name, param in MLA_model.low_d_readin_t.named_parameters():
+        if param.grad is not None:
+            print(f"{name} grad nan: {torch.isnan(param.grad).any()}, grad max: {param.grad.abs().max().item()}")
+        else:
+            print(f"{name} grad is None")
+    for group in optimizer.param_groups:
+        for param in group['params']:
+            if param.requires_grad:
+                name = param_to_name.get(param, '<no_name>')
+                print(f"{name}: requires_grad={param.requires_grad}, grad_is_None={param.grad is None}")
+
+    optimizer.zero_grad()
+
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> todo remove undo!!!!!!!!!!!!!!!!!!!!
+
     latents_k = latents_k[:, None, :, :]
     latents_k = torch.transpose(latents_k, 3, 2)
 
@@ -226,7 +268,8 @@ for epoch in range(n_epochs):
 
     z_noisy = q_sample(x_start=latents_k, t=t, noise=noise).to(device)
     predicted_noise = diff_model(z_noisy, t)
-    total_loss += appro_alpha * F.smooth_l1_loss(noise, predicted_noise)
+    # total_loss += appro_alpha * F.smooth_l1_loss(noise, predicted_noise)
+    total_loss = appro_alpha * F.smooth_l1_loss(noise, predicted_noise)  # todo remove undo!!!!!!!!!!!!!!!!!!!!
 
     total_loss += skilling_divergence(z_noisy, latents_k, t)
 
@@ -244,7 +287,6 @@ for epoch in range(n_epochs):
     print(8)
     print("low_d_readin_t nan: ",
           {key: torch.isnan(param).any() for key, param in MLA_model.low_d_readin_t.named_parameters()})
-
     print(8.1)
     for name, param in MLA_model.low_d_readin_t.named_parameters():
         if param.grad is not None:
