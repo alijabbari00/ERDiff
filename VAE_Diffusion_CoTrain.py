@@ -169,6 +169,10 @@ batch = next(iter(dataloader))
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
+print("-" * 200)
+print("device: ", device)
+print("-" * 200)
+
 input_dim = 1
 
 dm_model = diff_STBlock(input_dim)

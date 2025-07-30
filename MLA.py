@@ -10,6 +10,11 @@ from model_functions.MLA_Model import *
 from model_functions.VAE_Readout import *
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
+
+print("-" * 200)
+print("device: ", device)
+print("-" * 200)
+
 logger = logging.getLogger('train_logger')
 logger.setLevel(level=logging.INFO)
 handler = logging.FileHandler('train.log')
