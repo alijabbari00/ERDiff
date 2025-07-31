@@ -247,8 +247,9 @@ for epoch in range(n_epochs):
         if (epoch % 1 == 0) or (epoch == n_epochs-1):
             logger.info("Epoch:" + str(epoch) )
             current_metric = float(logger_performance(MLA_model))
-            print(f"Epoch: {epoch:3} {' ' * 10} loss: {round(total_loss.item(), 3):8.3f} {' ' * 10} "
-                  f"r2: {round(current_metric, 3):8.3f} {' ' * 10} best r2: {round(key_metric, 3):8.3f}")
+            if (epoch % 5 == 0) or (epoch == n_epochs-1):
+                print(f"Epoch: {epoch:3} {' ' * 10} loss: {round(total_loss.item(), 3):8.3f} {' ' * 10} "
+                      f"r2: {round(current_metric, 3):8.3f} {' ' * 10} best r2: {round(key_metric, 3):8.3f}")
             if current_metric > key_metric:
                 key_metric = current_metric
             if total_loss < pre_total_loss_:
