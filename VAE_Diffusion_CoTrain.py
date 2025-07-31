@@ -1,28 +1,26 @@
-import logging
-
-from model_functions.Diffusion import *
-from model_functions.ERDiff_utils import *
-from model_functions.VAE import *
-
-logger = logging.getLogger('train_logger')
-logger.setLevel(level=logging.INFO)
-handler = logging.FileHandler('train.log')
-handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-# logger.addHandler(console)
-logger.info('python logging test')
-
 import pickle
+import random
+import sys
+
+import numpy as np
+import scipy.signal as signal
+import torch
+import torch.nn.functional as F
+from torch import nn
+from torch.autograd import Variable
+from torch.optim import Adam
+from torch.utils.data import DataLoader
+
+from model_functions.Diffusion import quadratic_beta_schedule, diff_STBlock, p_losses
+from model_functions.ERDiff_utils import get_batches
+from model_functions.VAE import VAE_Model
 
 len_trial, num_neurons = 37, 187
 
 with open('datasets/Neural_Source.pkl', 'rb') as f:
     train_data1 = pickle.load(f)['data']
 
-train_trial_spikes1, train_trial_vel1, train_trial_dir1 = train_data1['firing_rates'], train_data1['velocity'], \
-    train_data1['labels']
+train_trial_spikes1, train_trial_vel1 = train_data1['firing_rates'], train_data1['velocity']
 
 start_pos = 1
 end_pos = 1
@@ -34,16 +32,10 @@ print(np.shape(train_trial_spikes_tide1))
 train_trial_vel_tide1 = np.array([spike[start_pos:len_trial + start_pos, :] for spike in train_trial_vel1])
 print(np.shape(train_trial_vel_tide1))
 
-# print(set(np.array(train_trial_dir)))
 bin_width = float(0.02) * 1000
-
-array_train_trial_dir1 = np.expand_dims(np.array((train_trial_dir1), dtype=object), 1)
 
 train_trial_spikes_tide = train_trial_spikes_tide1
 train_trial_vel_tide = train_trial_vel_tide1
-train_trial_dic_tide = np.squeeze(np.vstack([array_train_trial_dir1]))
-
-import scipy.signal as signal
 
 kern_sd_ms = 100
 kern_sd = int(round(kern_sd_ms / bin_width))
@@ -52,8 +44,6 @@ window /= np.sum(window)
 filt = lambda x: np.convolve(x, window, 'same')
 
 train_trial_spikes_smoothed = np.apply_along_axis(filt, 1, train_trial_spikes_tide)
-
-# test_trial_spikes_smoothed = test_trial_spikes_smoothed[:,1:,:]
 
 RAND_SEED = np.random.randint(10000)
 print("RANDOM SEED: ", RAND_SEED)
@@ -67,15 +57,6 @@ real_train_trial_spikes_smed, val_trial_spikes_smed = train_trial_spikes_smoothe
     train_trial_spikes_smoothed[indices[train_len:]]
 real_train_trial_vel_tide, val_trial_vel_tide = train_trial_vel_tide[indices[:train_len]], train_trial_vel_tide[
     indices[train_len:]]
-real_train_trial_dic_tide, val_trial_dic_tide = train_trial_dic_tide[indices[:train_len]], train_trial_dic_tide[
-    indices[train_len:]]
-
-import torch
-import torch.nn.functional as F
-import torch.nn as nn
-from torch.autograd import Variable
-import numpy as np
-import sys
 
 n_steps = 1
 # n_epochs = 500
@@ -84,8 +65,6 @@ n_epochs = int(sys.argv[1])
 batch_size = 16
 ae_res_weight = 10
 kld_weight = 1
-
-import random
 
 n_batches = len(real_train_trial_spikes_smed) // batch_size
 print(n_batches)
@@ -112,7 +91,6 @@ def get_loss(model, spike, emg):
     emg_loss = mse_criterion(vel_hat_, emg)
     kld_loss = torch.mean(0.5 * (- log_var + mu ** 2 + log_var.exp() - 1))
     total_loss = ae_res_weight * ae_loss + emg_loss + kld_weight * kld_loss
-    # total_loss = ae_res_weight * ae_loss 
     return total_loss
 
 
@@ -136,16 +114,12 @@ loss_list = []
 model = VAE_Model()
 optimizer = torch.optim.Adam(model.parameters(), lr=l_rate)
 
-from torch.optim import Adam
-
-import numpy as np
-
 timesteps = 50
 
 # define beta schedule
 betas = quadratic_beta_schedule(timesteps=timesteps)
 
-# define alphas 
+# define alphas
 alphas = 1. - betas
 alphas_cumprod = torch.cumprod(alphas, axis=0)
 alphas_cumprod_prev = F.pad(alphas_cumprod[:-1], (1, 0), value=1.0)
@@ -168,73 +142,8 @@ def extract(a, t, x_shape):
 seq_len = 37
 latent_len = 8
 
-
-# forward diffusion (using the nice property)
-def q_sample(x_start, t, noise=None):
-    if noise is None:
-        noise = torch.randn_like(x_start)
-
-    sqrt_alphas_cumprod_t = extract(sqrt_alphas_cumprod, t, x_start.shape)
-    sqrt_one_minus_alphas_cumprod_t = extract(
-        sqrt_one_minus_alphas_cumprod, t, x_start.shape
-    )
-
-    return sqrt_alphas_cumprod_t * x_start + sqrt_one_minus_alphas_cumprod_t * noise
-
-
 channels = 1
 global_batch_size = 16
-
-
-@torch.no_grad()
-def p_sample(model, x, t, t_index):
-    betas_t = extract(betas, t, x.shape)
-    sqrt_one_minus_alphas_cumprod_t = extract(
-        sqrt_one_minus_alphas_cumprod, t, x.shape
-    )
-    sqrt_recip_alphas_t = extract(sqrt_recip_alphas, t, x.shape)
-
-    model_mean = sqrt_recip_alphas_t * (
-            x - betas_t * model(x, t) / sqrt_one_minus_alphas_cumprod_t
-    )
-
-    if t_index == 0:
-        return model_mean
-    else:
-        posterior_variance_t = extract(posterior_variance, t, x.shape)
-        noise = torch.randn_like(x)
-        # Algorithm 2 line 4:
-        return model_mean + torch.sqrt(posterior_variance_t) * noise
-
-
-@torch.no_grad()
-def p_sample_loop(model, shape):
-    device = next(model.parameters()).device
-
-    b = shape[0]
-
-    img = torch.randn(shape, device=device)
-    imgs = []
-
-    for i in tqdm(reversed(range(0, timesteps)), desc='sampling loop time step', total=timesteps):
-        img = p_sample(model, img, torch.full((b,), i, device=device, dtype=torch.long), i)
-        imgs.append(img.cpu().numpy())
-    return imgs
-
-
-@torch.no_grad()
-def sample(model, image_size, batch_size=16, channels=3):
-    return p_sample_loop(model, shape=(batch_size, channels, seq_len, latent_len))
-
-
-def num_to_groups(num, divisor):
-    groups = num // divisor
-    remainder = num % divisor
-    arr = [divisor] * groups
-    if remainder > 0:
-        arr.append(remainder)
-    return arr
-
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -247,8 +156,6 @@ dm_optimizer = Adam(dm_model.parameters(), lr=1e-3)
 # model
 
 pre_loss = 1e10
-
-from torch.utils.data import DataLoader
 
 for epoch in range(n_epochs):
     spike_gen_obj = get_batches(real_train_trial_spikes_stand, batch_size)

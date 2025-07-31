@@ -4,7 +4,6 @@ from functools import partial
 
 import matplotlib.pyplot as plt
 from tqdm.auto import tqdm
-from einops import rearrange
 
 import torch
 from torch import nn, einsum
@@ -22,20 +21,20 @@ from torch.optim import Adam
 
 import numpy as np
 
-len_trial,num_neurons = 37, 187
+len_trial,num_neurons = 25, 95
 
-start_pos = 1 
+start_pos = 0
 end_pos = 1
 
 class VAE_Model(nn.Module):
     def __init__(self):
-        super(VAE_Model, self).__init__()
+        super().__init__()
         # Hyper-Parameters
         self.spike_dim = num_neurons
         self.low_dim = 64
         self.latent_dim = 8
         self.vel_dim = 2
-        self.encoder_n_layers, self.decoder_n_layers = 2,1
+        self.encoder_n_layers, self.decoder_n_layers = 1,1
         self.hidden_dims = [64,32]
 
         # Low-D Readin
@@ -113,7 +112,8 @@ class VAE_Model(nn.Module):
         # Spike Decoder
         re_sp, _ = self.sde_rnn(z)
         re_sp = self.sde_fc1(re_sp)
-        re_sp = self.softplus(self.sde_fc2(re_sp))
+        re_sp = (self.sde_fc2(re_sp))
+        # re_sp = self.softplus(self.sde_fc2(re_sp))
 
         # Velocity Decoder
         vel_latent = z
@@ -122,7 +122,8 @@ class VAE_Model(nn.Module):
         vel_hat_minus_2 = self.vde_fc_minus_2(vel_latent)
 
         vel_hat = torch.zeros_like(vel_hat_minus_0)
-
+        # print("len_trial:", len_trial)
+        # print("start_pos:", start_pos)
         for i in range(len_trial - start_pos):
             vel_hat[:,i,:] += vel_hat_minus_0[:,i,:]
             # if i > 0:

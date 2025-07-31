@@ -1,13 +1,8 @@
 import logging
 import pickle
-import sys
+import random
 
-import numpy as np
 import scipy.signal as signal
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
 
 from model_functions.Diffusion import *
 from model_functions.ERDiff_utils import *
@@ -33,7 +28,7 @@ with open('datasets/Neural_Target.pkl', 'rb') as f:
     test_data = pickle.load(f)['data']
 
 train_trial_spikes1, train_trial_vel1, train_trial_dir1 = train_data1['firing_rates'], train_data1['velocity'], \
-train_data1['labels']
+    train_data1['labels']
 
 test_trial_spikes, test_trial_vel, test_trial_dir = test_data['firing_rates'], test_data['velocity'], np.squeeze(
     test_data['labels'])
@@ -80,7 +75,7 @@ np.random.seed(RAND_SEED)
 np.random.shuffle(indices)
 train_len = round(len(indices) * 0.8)
 real_train_trial_spikes_smed, val_trial_spikes_smed = train_trial_spikes_smoothed[indices[:train_len]], \
-train_trial_spikes_smoothed[indices[train_len:]]
+    train_trial_spikes_smoothed[indices[train_len:]]
 real_train_trial_vel_tide, val_trial_vel_tide = train_trial_vel_tide[indices[:train_len]], train_trial_vel_tide[
     indices[train_len:]]
 real_train_trial_dic_tide, val_trial_dic_tide = train_trial_dic_tide[indices[:train_len]], train_trial_dic_tide[
@@ -91,8 +86,6 @@ n_steps = 1
 # read n_epochs from command line:
 n_epochs = int(sys.argv[1])
 batch_size = 64
-
-from sklearn.metrics import r2_score
 
 l_rate = 0.001
 
@@ -118,8 +111,6 @@ diff_model.load_state_dict(diff_model_dict)
 
 for k, v in diff_model.named_parameters():
     v.requires_grad = False
-
-import random
 
 
 def setup_seed(seed):
@@ -158,29 +149,13 @@ optimizer = torch.optim.Adam(MLA_model.parameters(), lr=l_rate)
 criterion = nn.MSELoss()
 poisson_criterion = nn.PoissonNLLLoss(log_input=False)
 
-# for param in MLA_model.parameters():
-#     param.requires_grad = False
-
-for param in MLA_model.vde_rnn.parameters():
+# Freeze the other parameters
+for param in MLA_model.parameters():
     param.requires_grad = False
 
-for param in MLA_model.sde_rnn.parameters():
-    param.requires_grad = False
-
-for param in MLA_model.encoder_rnn.parameters():
-    param.requires_grad = False
-
-MLA_model.low_d_readin_s.weight.requires_grad = False
-MLA_model.low_d_readin_s.bias.requires_grad = False
-MLA_model.fc_mu_1.weight.requires_grad = False
-MLA_model.fc_mu_1.bias.requires_grad = False
-MLA_model.fc_log_var_1.weight.requires_grad = False
-MLA_model.fc_log_var_1.bias.requires_grad = False
-MLA_model.sde_fc1.weight.requires_grad = False
-MLA_model.sde_fc1.bias.requires_grad = False
-MLA_model.sde_fc2.weight.requires_grad = False
-MLA_model.sde_fc2.bias.requires_grad = False
-MLA_model.vde_fc_minus_0.weight.requires_grad = False
+MLA_model.align_layer.weight.requires_grad = True
+MLA_model.low_d_readin_t_2.weight.requires_grad = True
+MLA_model.low_d_readin_t_2.bias.requires_grad = True
 
 test_trial_spikes_stand_half_len = len(test_trial_spikes_stand) // 2
 

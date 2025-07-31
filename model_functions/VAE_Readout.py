@@ -4,7 +4,7 @@ from functools import partial
 
 import matplotlib.pyplot as plt
 from tqdm.auto import tqdm
-from einops import rearrange
+
 
 import torch
 from torch import nn, einsum
@@ -22,7 +22,11 @@ from torch.optim import Adam
 
 import numpy as np
 
-len_trial, num_neurons_s, num_neurons_t = 13, 187, 172
+# Own Dataset
+len_trial, num_neurons_s, num_neurons_t = 14, 187, 172
+
+# Public Dataset
+# len_trial, num_neurons_s, num_neurons_t = 25, 95, 95
 
 class VAE_Readout_Model(nn.Module):
     def __init__(self):
@@ -33,7 +37,7 @@ class VAE_Readout_Model(nn.Module):
         self.low_dim = 64
         self.latent_dim = 8
         self.vel_dim = 2
-        self.encoder_n_layers, self.decoder_n_layers = 2,1
+        self.encoder_n_layers, self.decoder_n_layers = 1,1
         self.hidden_dims = [64,32]
         self.elu = nn.ELU()
         self.softplus = nn.Softplus()
@@ -43,9 +47,11 @@ class VAE_Readout_Model(nn.Module):
 
         self.align_layer = nn.Linear(self.spike_dim_t,self.spike_dim_t, bias = False)
 
-        self.low_d_readin_t = nn.Linear(self.spike_dim_t, self.low_dim)
+        self.low_d_readin_t_1 = nn.Linear(self.spike_dim_t, self.spike_dim_t)
 
-        
+        self.low_d_readin_t_2 = nn.Linear(self.spike_dim_t, self.low_dim)
+
+
         # self.al_fc2 = nn.Linear(self.spike_dim, self.spike_dim)
 
         nn.init.eye_(self.align_layer.weight)
