@@ -191,7 +191,7 @@ MLA_model.sde_fc2.bias.requires_grad = False
 MLA_model.vde_fc_minus_0.weight.requires_grad = False
 
 
-epoches = 300
+epoches = 1000
 test_trial_spikes_stand_half_len = len(test_trial_spikes_stand) // 2
 
 

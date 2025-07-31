@@ -299,7 +299,7 @@ pre_loss = 1e10
 from torchvision import transforms
 from torch.utils.data import DataLoader
 
-for epoch in tqdm_notebook(range(n_epochs)):
+for epoch in range(n_epochs):
     spike_gen_obj = get_batches(real_train_trial_spikes_stand,batch_size)
     emg_gen_obj = get_batches(real_train_trial_vel_tide,batch_size)
     for ii in range(n_batches):
@@ -352,7 +352,6 @@ for epoch in tqdm_notebook(range(n_epochs)):
 
         loss = p_losses(dm_model, batch, t)
 
-        print("Step", step, " Loss:", loss.item())
         total_loss += loss.item()
 
         loss.backward()
