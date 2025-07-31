@@ -77,7 +77,11 @@ setup_seed(config["seed"])
 vanilla_model_dict = torch.load('../model_checkpoints/source_vae_model.pth', weights_only=True,
                                 map_location=torch.device('cpu'))
 
-MLA_model = VAE_MLA_Model().to(device)
+len_trial = train_trial_spikes_tide.shape[1]
+num_neurons_s = train_trial_spikes_tide.shape[2]
+num_neurons_t = test_trial_spikes.shape[2]
+
+MLA_model = VAE_MLA_Model(len_trial, num_neurons_s, num_neurons_t).to(device)
 MLA_dict_keys = MLA_model.state_dict().keys()
 vanilla_model_dict_keys = vanilla_model_dict.keys()
 
@@ -182,7 +186,7 @@ for epoch in range(epoches):
             vanilla_model_dict = torch.load('../model_checkpoints/vae_model_mla.pth', weights_only=True,
                                             map_location=torch.device('cpu'))
 
-            VAE_Readout_model = VAE_Readout_Model()
+            VAE_Readout_model = VAE_Readout_Model(len_trial, num_neurons_s, num_neurons_t)
             DL_dict_keys = VAE_Readout_model.state_dict().keys()
             vanilla_model_dict_keys = vanilla_model_dict.keys()
 

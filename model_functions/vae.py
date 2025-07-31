@@ -1,20 +1,14 @@
 import torch
 from torch import nn
 
-# Own Dataset
-len_trial, num_neurons = 14, 187
-
-# Public Dataset
-# len_trial, num_neurons_s, num_neurons_t = 25, 95, 95
-
 start_pos = 0
-end_pos = 1
 
 
 class VAE_Model(nn.Module):
-    def __init__(self):
+    def __init__(self, len_trial, num_neurons):
         super().__init__()
         # Hyper-Parameters
+        self.len_trial = len_trial
         self.spike_dim = num_neurons
         self.low_dim = 64
         self.latent_dim = 8
@@ -99,7 +93,7 @@ class VAE_Model(nn.Module):
 
         vel_hat = torch.zeros_like(vel_hat_minus_0)
 
-        for i in range(len_trial - start_pos):
+        for i in range(self.len_trial - start_pos):
             vel_hat[:, i, :] += vel_hat_minus_0[:, i, :]
 
         return re_sp, vel_hat, mu, log_var

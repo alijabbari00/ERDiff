@@ -26,8 +26,6 @@ def get_batches(x, batch_size):
 RAND_SEED = np.random.randint(10000)
 print("RANDOM SEED: ", RAND_SEED)
 
-len_trial, num_neurons = 37, 187
-
 # with open('datasets/Neural_Source.pkl', 'rb') as f:
 #     train_data1 = pickle.load(f)['data']
 with open('../datasets/source_data_array.pkl', 'rb') as f:
@@ -119,7 +117,10 @@ setup_seed(RAND_SEED)
 
 pre_total_loss_ = 1e18
 
-model = VAE_Model()
+len_trial = train_trial_spikes_tide.shape[1]
+num_neurons = train_trial_spikes_tide.shape[2]
+
+model = VAE_Model(len_trial=len_trial, num_neurons=num_neurons)
 optimizer = torch.optim.Adam(model.parameters(), lr=l_rate)
 
 timesteps = 100
