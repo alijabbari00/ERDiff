@@ -92,6 +92,7 @@ def get_loss(model, spike, emg):
     print("re_sp_ is nan: ", torch.isnan(re_sp_).any())
     print("spike is nan: ", torch.isnan(spike).any())
     ae_loss = poisson_criterion(re_sp_, spike)
+    print("ae_loss: ", ae_loss)
     emg_loss = mse_criterion(vel_hat_, emg)
     kld_loss = torch.mean(0.5 * (- log_var + mu ** 2 + log_var.exp() - 1))
     print("All Losses: ", ae_loss, emg_loss, kld_loss)
