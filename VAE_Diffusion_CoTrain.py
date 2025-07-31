@@ -5,13 +5,12 @@ import sys
 import numpy as np
 import scipy.signal as signal
 import torch
-import torch.nn.functional as F
 from torch import nn
 from torch.autograd import Variable
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 
-from model_functions.Diffusion import quadratic_beta_schedule, diff_STBlock, p_losses
+from model_functions.Diffusion import diff_STBlock, p_losses
 from model_functions.ERDiff_utils import get_batches
 from model_functions.VAE import VAE_Model
 
@@ -58,17 +57,15 @@ real_train_trial_spikes_smed, val_trial_spikes_smed = train_trial_spikes_smoothe
 real_train_trial_vel_tide, val_trial_vel_tide = train_trial_vel_tide[indices[:train_len]], train_trial_vel_tide[
     indices[train_len:]]
 
-n_steps = 1
 # n_epochs = 500
 # read n_epochs from command line:
 n_epochs = int(sys.argv[1])
-batch_size = 16
+batch_size = 32
 ae_res_weight = 10
 kld_weight = 1
 
 n_batches = len(real_train_trial_spikes_smed) // batch_size
 print(n_batches)
-gamma_ = np.float32(1.)
 
 mse_criterion = nn.MSELoss()
 poisson_criterion = nn.PoissonNLLLoss(log_input=False)
@@ -81,7 +78,6 @@ val_trial_spikes_stand = (val_trial_spikes_smed)
 spike_train = Variable(torch.from_numpy(real_train_trial_spikes_stand)).float()
 spike_val = Variable(torch.from_numpy(val_trial_spikes_stand)).float()
 
-emg_train = Variable(torch.from_numpy(real_train_trial_vel_tide)).float()
 emg_val = Variable(torch.from_numpy(val_trial_vel_tide)).float()
 
 
@@ -107,43 +103,13 @@ def setup_seed(seed):
 setup_seed(RAND_SEED)
 
 pre_total_loss_ = 1e18
-total_loss_list_ = []
-last_improvement = 0
-loss_list = []
 
 model = VAE_Model()
 optimizer = torch.optim.Adam(model.parameters(), lr=l_rate)
 
-timesteps = 50
+timesteps = 100
 
-# define beta schedule
-betas = quadratic_beta_schedule(timesteps=timesteps)
-
-# define alphas
-alphas = 1. - betas
-alphas_cumprod = torch.cumprod(alphas, axis=0)
-alphas_cumprod_prev = F.pad(alphas_cumprod[:-1], (1, 0), value=1.0)
-sqrt_recip_alphas = torch.sqrt(1.0 / alphas)
-
-# calculations for diffusion q(x_t | x_{t-1}) and others
-sqrt_alphas_cumprod = torch.sqrt(alphas_cumprod)
-sqrt_one_minus_alphas_cumprod = torch.sqrt(1. - alphas_cumprod)
-
-# calculations for posterior q(x_{t-1} | x_t, x_0)
-posterior_variance = betas * (1. - alphas_cumprod_prev) / (1. - alphas_cumprod)
-
-
-def extract(a, t, x_shape):
-    batch_size = t.shape[0]
-    out = a.gather(-1, t.cpu())
-    return out.reshape(batch_size, *((1,) * (len(x_shape) - 1))).to(t.device)
-
-
-seq_len = 37
-latent_len = 8
-
-channels = 1
-global_batch_size = 16
+global_batch_size = 32
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -153,7 +119,6 @@ dm_model = diff_STBlock(input_dim)
 dm_model.to(device)
 
 dm_optimizer = Adam(dm_model.parameters(), lr=1e-3)
-# model
 
 pre_loss = 1e10
 
@@ -168,7 +133,6 @@ for epoch in range(n_epochs):
         spike_batch = Variable(torch.from_numpy(spike_batch)).float()
         emg_batch = Variable(torch.from_numpy(emg_batch)).float()
 
-        # Loss
         batch_loss = get_loss(model, spike_batch, emg_batch)
 
         batch_loss.backward()
@@ -176,7 +140,6 @@ for epoch in range(n_epochs):
 
     with torch.no_grad():
         val_total_loss = get_loss(model, spike_val, emg_val)
-        loss_list.append(val_total_loss.item())
 
         _, _, train_latents, _ = model(spike_train, train_flag=False)
 
