@@ -1,5 +1,4 @@
 import argparse
-import os
 import pickle
 import sys
 from datetime import datetime
@@ -12,14 +11,12 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
+sys.path.append('..')
 from model_functions.diffusion import diff_STBlock, q_sample
 from model_functions.mla_model import VAE_MLA_Model
 from model_functions.vae_readout import VAE_Readout_Model
 from utils_scripts.utils_torch import setup_seed, SpikeDataset, logger_performance
 from utils_scripts.utils_torch import vel_cal
-
-parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(parent_dir)
 
 parser = argparse.ArgumentParser(description="Set hyperparameters from command line")
 
@@ -44,21 +41,14 @@ with open('../datasets/source_data_array.pkl', 'rb') as f:
 with open('../datasets/target_data_array.pkl', 'rb') as f:
     test_data = pickle.load(f)
 
-train_trial_spikes1, train_trial_vel1, train_trial_dir1 = train_data['neural'], train_data['vel'], train_data['label']
+train_trial_spikes1, train_trial_vel1 = train_data['neural'], train_data['vel']
 
-test_trial_spikes, test_trial_vel, test_trial_dir = test_data['neural'], test_data['vel'], np.squeeze(
-    test_data['label'])
-# print(np.shape(train_trial_vel[0]))
-
+test_trial_spikes, test_trial_vel = test_data['neural'], test_data['vel']
 
 bin_width = float(0.01) * 1000
 
-array_train_trial_dir1 = np.expand_dims(np.array(train_trial_dir1, dtype=object), 1)
-
 train_trial_spikes_tide = train_trial_spikes1
 train_trial_vel_tide = train_trial_vel1
-train_trial_dic_tide = np.squeeze(np.vstack([array_train_trial_dir1]))
-test_trial_dic_tide = np.squeeze(np.vstack([test_trial_dir]))
 
 kern_sd_ms = float(0.01) * 1000 * 3
 kern_sd = int(round(kern_sd_ms / bin_width))
@@ -74,7 +64,6 @@ timesteps = 100
 eps = 1 / timesteps
 channels = 1
 device = "cuda" if torch.cuda.is_available() else "cpu"
-# device = "cpu"
 print(f"device: {device}")
 
 input_dim = 1
