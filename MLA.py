@@ -170,7 +170,7 @@ q_test = Variable(torch.from_numpy(np.full((num_y_test, 1), 1 / num_y_test))).fl
 
 
 def logger_performance(model):
-    re_sp_test, vel_hat_test, _, _, _, _, _ = model(spike_train, spike_test, p, q_test, train_flag=False)
+    re_sp_test, vel_hat_test, _, _, _, _, _, _ = model(spike_train, spike_test, p, q_test, train_flag=False)
 
     sys.stdout.flush()
     key_metric = 100 * r2_score(test_trial_vel_tide.reshape((-1, 2)), vel_hat_test.reshape((-1, 2)),
