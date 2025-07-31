@@ -161,7 +161,7 @@ for epoch in range(n_epochs):
         if val_total_loss < pre_total_loss_:
             pre_total_loss_ = val_total_loss
             torch.save(model.state_dict(), '../model_checkpoints/source_vae_model.pth')
-            np.save("./npy_files/train_latents.npy", train_latents)
+            np.save("../npy_files/train_latents.npy", train_latents)
 
     train_latents = np.expand_dims(train_latents, 1).astype(np.float32)
     train_spike_data = train_latents.transpose(0, 1, 3, 2)
