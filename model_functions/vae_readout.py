@@ -48,10 +48,10 @@ class VAE_Readout_Model(nn.Module):
         self.align_layer = nn.Linear(self.spike_dim_t,self.spike_dim_t, bias = False)
 
         self.low_d_readin_t_1 = nn.Linear(self.spike_dim_t, self.spike_dim_t)
-        
+
         self.low_d_readin_t_2 = nn.Linear(self.spike_dim_t, self.low_dim)
 
-        
+
         # self.al_fc2 = nn.Linear(self.spike_dim, self.spike_dim)
 
         nn.init.eye_(self.align_layer.weight)
