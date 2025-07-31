@@ -11,8 +11,16 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 
 from model_functions.Diffusion import diff_STBlock, p_losses
-from model_functions.ERDiff_utils import get_batches
 from model_functions.VAE import VAE_Model
+
+
+def get_batches(x, batch_size):
+    n_batches = len(x) // (batch_size)
+    x = x[:n_batches * batch_size:]
+    for n in range(0, x.shape[0], batch_size):
+        x_batch = x[n:n + (batch_size)]
+        yield x_batch
+
 
 len_trial, num_neurons = 37, 187
 
