@@ -178,7 +178,7 @@ for param in MLA_model.vde_rnn.parameters():
 
 for param in MLA_model.sde_rnn.parameters():
     param.requires_grad = False
-    
+
 for param in MLA_model.encoder_rnn.parameters():
     param.requires_grad = False
 
@@ -221,7 +221,7 @@ for epoch in range(n_epochs):
 
     optimizer.zero_grad()
 
-    re_sp, _, distri_0, distri_k, latents_k, output_sh_loss, log_var = MLA_model(spike_day_0, spike_day_k, p, q, train_flag=True) 
+    re_sp, _, distri_0, distri_k, latents_k, output_sh_loss, log_var = MLA_model(spike_day_0, spike_day_k, p, q, train_flag=True)
 
     total_loss = output_sh_loss
 
@@ -236,27 +236,27 @@ for epoch in range(n_epochs):
     z_noisy = q_sample(x_start=latents_k, t=t, noise=noise)
     predicted_noise = diff_model(z_noisy, t)
     total_loss += appro_alpha * F.smooth_l1_loss(noise, predicted_noise)
-    
+
     total_loss += skilling_divergence(z_noisy,latents_k,t)
-    
+
 
     total_loss.backward(retain_graph=True)
     optimizer.step()
 
     with torch.no_grad():
         if (epoch % 2 == 0) or (epoch == n_epochs-1):
-            print(str(epoch), "loss:", round(total_loss.item(), 3))
             logger.info("Epoch:" + str(epoch) )
             current_metric = float(logger_performance(MLA_model))
-            print(" " * 35, "current_metric", round(current_metric, 3), "        best:" , round(key_metric, 3))
+            print(f"Epoch: {epoch:3} loss: {round(total_loss.item(), 3):8.3f} "
+                  f"current_metric: {round(current_metric, 3):8.3f} best: {round(key_metric, 3):8.3f}")
             if current_metric > key_metric:
                 key_metric = current_metric
             if total_loss < pre_total_loss_:
                 torch.save(MLA_model.state_dict(),'model_checkpoints/vae_model_mla')
-                pre_total_loss_ = total_loss 
-                
+                pre_total_loss_ = total_loss
 
-vanilla_model_dict = torch.load('model_checkpoints/vae_model_mla', weighs_only=True)
+
+vanilla_model_dict = torch.load('model_checkpoints/vae_model_mla')
 
 MLA_model = VAE_MLA_Model()
 
@@ -266,7 +266,7 @@ with torch.no_grad():
     _, _, _, _, test_latents, _,_ = MLA_model(spike_train, spike_test,p,q_test, train_flag = False)
 test_latents = np.array(test_latents)
 np.save("./npy_files/test_latents.npy",test_latents)
-    
+
 
 def create_dir_dict(trial_dir):
     dir_dict = {}
@@ -283,7 +283,7 @@ train_dir_dict, test_dir_dict = create_dir_dict(real_train_trial_dic_tide), crea
 val_dir_dict = create_dir_dict(val_trial_dic_tide)
 
 
-vanilla_model_dict = torch.load('model_checkpoints/vae_model_mla', weighs_only=True)
+vanilla_model_dict = torch.load('model_checkpoints/vae_model_mla')
 
 VAE_Readout_model = VAE_Readout_Model()
 DL_dict_keys = VAE_Readout_model.state_dict().keys()

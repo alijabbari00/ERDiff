@@ -365,6 +365,3 @@ for epoch in range(n_epochs):
     if total_loss < pre_loss:
         pre_loss = total_loss
         torch.save(dm_model.state_dict(), 'model_checkpoints/source_diffusion_model')
-
-
-
