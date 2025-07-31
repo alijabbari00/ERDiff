@@ -113,7 +113,7 @@ input_dim = 1
 
 diff_model = diff_STBlock(input_dim)
 
-diff_model_dict = torch.load('model_checkpoints/source_diffusion_model', weights_only=True)
+diff_model_dict = torch.load('model_checkpoints/source_diffusion_model.pth', weights_only=True)
 diff_model.load_state_dict(diff_model_dict)
 
 for k, v in diff_model.named_parameters():
@@ -133,7 +133,7 @@ def setup_seed(seed):
 # setup_seed(2023)
 setup_seed(RAND_SEED)
 
-vanilla_model_dict = torch.load('model_checkpoints/source_vae_model', weights_only=True)
+vanilla_model_dict = torch.load('model_checkpoints/source_vae_model.pth', weights_only=True)
 
 MLA_model = VAE_MLA_Model()
 MLA_dict_keys = MLA_model.state_dict().keys()
@@ -240,10 +240,10 @@ for epoch in range(n_epochs):
             if current_metric > key_metric:
                 key_metric = current_metric
             if total_loss < pre_total_loss_:
-                torch.save(MLA_model.state_dict(), 'model_checkpoints/vae_model_mla')
+                torch.save(MLA_model.state_dict(), 'model_checkpoints/vae_model_mla.pth')
                 pre_total_loss_ = total_loss
 
-vanilla_model_dict = torch.load('model_checkpoints/vae_model_mla')
+vanilla_model_dict = torch.load('model_checkpoints/vae_model_mla.pth')
 
 MLA_model = VAE_MLA_Model()
 
@@ -270,7 +270,7 @@ def create_dir_dict(trial_dir):
 train_dir_dict, test_dir_dict = create_dir_dict(real_train_trial_dic_tide), create_dir_dict(test_trial_dir)
 val_dir_dict = create_dir_dict(val_trial_dic_tide)
 
-vanilla_model_dict = torch.load('model_checkpoints/vae_model_mla')
+vanilla_model_dict = torch.load('model_checkpoints/vae_model_mla.pth')
 
 VAE_Readout_model = VAE_Readout_Model()
 DL_dict_keys = VAE_Readout_model.state_dict().keys()

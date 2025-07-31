@@ -22,7 +22,7 @@ with open('datasets/Neural_Source.pkl', 'rb') as f:
     train_data1 = pickle.load(f)['data']
 
 train_trial_spikes1, train_trial_vel1, train_trial_dir1 = train_data1['firing_rates'], train_data1['velocity'], \
-train_data1['labels']
+    train_data1['labels']
 
 start_pos = 1
 end_pos = 1
@@ -64,7 +64,7 @@ np.random.seed(RAND_SEED)
 np.random.shuffle(indices)
 train_len = round(len(indices) * 0.80)
 real_train_trial_spikes_smed, val_trial_spikes_smed = train_trial_spikes_smoothed[indices[:train_len]], \
-train_trial_spikes_smoothed[indices[train_len:]]
+    train_trial_spikes_smoothed[indices[train_len:]]
 real_train_trial_vel_tide, val_trial_vel_tide = train_trial_vel_tide[indices[:train_len]], train_trial_vel_tide[
     indices[train_len:]]
 real_train_trial_dic_tide, val_trial_dic_tide = train_trial_dic_tide[indices[:train_len]], train_trial_dic_tide[
@@ -275,7 +275,7 @@ for epoch in range(n_epochs):
 
         if val_total_loss < pre_total_loss_:
             pre_total_loss_ = val_total_loss
-            torch.save(model.state_dict(), 'model_checkpoints/source_vae_model')
+            torch.save(model.state_dict(), 'model_checkpoints/source_vae_model.pth')
 
             np.save("./npy_files/train_latents.npy", train_latents)
 
@@ -306,4 +306,4 @@ for epoch in range(n_epochs):
 
     if total_loss < pre_loss:
         pre_loss = total_loss
-        torch.save(dm_model.state_dict(), 'model_checkpoints/source_diffusion_model')
+        torch.save(dm_model.state_dict(), 'model_checkpoints/source_diffusion_model.pth')
