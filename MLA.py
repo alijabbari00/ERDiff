@@ -191,7 +191,6 @@ MLA_model.sde_fc2.bias.requires_grad = False
 MLA_model.vde_fc_minus_0.weight.requires_grad = False
 
 
-epoches = 1000
 test_trial_spikes_stand_half_len = len(test_trial_spikes_stand) // 2
 
 
@@ -214,7 +213,7 @@ def logger_performance(model):
 
 # Maximum Likelihood Alignment
 
-for epoch in range(epoches):
+for epoch in range(n_epochs):
 
     optimizer.zero_grad()
 
@@ -241,11 +240,11 @@ for epoch in range(epoches):
     optimizer.step()
 
     with torch.no_grad():
-        if (epoch % 5 == 0) or (epoch == n_epochs-1):
-            print(str(epoch), round(total_loss.item(), 3))
+        if (epoch % 2 == 0) or (epoch == n_epochs-1):
+            print(str(epoch), "loss:", round(total_loss.item(), 3))
             logger.info("Epoch:" + str(epoch) )
             current_metric = float(logger_performance(MLA_model))
-            print(" " * 55, "current_metric", round(current_metric, 3), "        best:" , round(key_metric, 3))
+            print(" " * 35, "current_metric", round(current_metric, 3), "        best:" , round(key_metric, 3))
             if current_metric > key_metric:
                 key_metric = current_metric
             if total_loss < pre_total_loss_:
