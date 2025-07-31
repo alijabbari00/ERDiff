@@ -88,8 +88,8 @@ class VAE_Model(nn.Module):
         # Spike Decoder
         re_sp, _ = self.sde_rnn(z)
         re_sp = self.sde_fc1(re_sp)
-        re_sp = (self.sde_fc2(re_sp))
-        # re_sp = self.softplus(self.sde_fc2(re_sp))
+        # re_sp = (self.sde_fc2(re_sp))
+        re_sp = self.softplus(self.sde_fc2(re_sp))
 
         # Velocity Decoder
         vel_latent = z
