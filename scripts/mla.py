@@ -33,8 +33,6 @@ config = vars(args)
 
 print("Config Data:", config)
 
-num_neurons_s, num_neurons_t = 187, 172
-
 with open('../datasets/source_data_array.pkl', 'rb') as f:
     train_data = pickle.load(f)
 
@@ -48,7 +46,6 @@ test_trial_spikes, test_trial_vel = test_data['neural'], test_data['vel']
 bin_width = float(0.01) * 1000
 
 train_trial_spikes_tide = train_trial_spikes1
-train_trial_vel_tide = train_trial_vel1
 
 kern_sd_ms = float(0.01) * 1000 * 3
 kern_sd = int(round(kern_sd_ms / bin_width))
@@ -58,10 +55,8 @@ filt = lambda x: np.convolve(x, window, 'same')
 
 train_trial_spikes_smoothed = np.apply_along_axis(filt, 1, train_trial_spikes_tide)
 test_trial_spikes_smoothed = np.apply_along_axis(filt, 1, test_trial_spikes)
-test_trial_vel = test_trial_vel
 
 timesteps = 100
-eps = 1 / timesteps
 channels = 1
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"device: {device}")
@@ -113,11 +108,8 @@ MLA_model.low_d_readin_t_2.weight.requires_grad = True
 MLA_model.low_d_readin_t_2.bias.requires_grad = True
 
 epoches = config["epoches"]
-# test_trial_spikes_stand_half_len = len(test_trial_spikes_smoothed) // 2
-test_trial_spikes_stand_half_len = len(test_trial_spikes_smoothed)
 
 spike_day_0 = Variable(torch.from_numpy(train_trial_spikes_smoothed)).float().to(device)
-# spike_day_k = Variable(torch.from_numpy(test_trial_spikes_smoothed[:test_trial_spikes_stand_half_len])).float()
 spike_day_k = Variable(torch.from_numpy(test_trial_spikes_smoothed)).float().to(device)
 spike_dataset = SpikeDataset(spike_day_0, spike_day_k)
 
@@ -135,18 +127,15 @@ timestamp = datetime.now().strftime("%m%d_%H%M")
 exp_name = f'ERDiff_MLA_{timestamp}'
 
 # Maximum Likelihood Alignment
-
 for epoch in range(epoches):
 
-    total_epoch_loss = 0
-    total_ot_loss = 0
-    total_diffusion_loss = 0
+    optimizer.zero_grad()
 
     for batch in dataloader:
-        optimizer.zero_grad()
-        spike_day_0_batch, spike_day_k_batch = batch
+        batch_day_0 = batch[0].to(device)
+        batch_day_k = batch[1].to(device)
 
-        re_sp, _, distri_0, distri_k, latents_k, output_sh_loss, log_var, _ = MLA_model(spike_day_0, spike_day_k, p, q,
+        re_sp, _, distri_0, distri_k, latents_k, output_sh_loss, log_var, _ = MLA_model(batch_day_0, batch_day_k, p, q,
                                                                                         train_flag=False)
 
         ot_loss = ot_weight * output_sh_loss
@@ -168,17 +157,10 @@ for epoch in range(epoches):
 
         optimizer.step()
 
-        total_epoch_loss += total_loss.item()
-        total_ot_loss += ot_loss.item()
-        total_diffusion_loss += diffusion_loss.item()
 
     with torch.no_grad():
 
         if epoch % 5 == 0 or epoch == epoches - 1:
-            # print(total_loss)
-            # print("Epoch:" + str(epoch) + " Total Loss: " + str(total_loss.item()))
-            # print(f"Epoch: {epoch} Total Loss: {total_epoch_loss:.4f} OT Loss: {total_ot_loss:.4f} Diffusion Loss: {total_diffusion_loss:.4f}")
-            # logger.info("Epoch:" + str(epoch) )
             current_metric = float(logger_performance(MLA_model, spike_day_0, spike_day_k, p, q_test, test_trial_vel))
             if current_metric > best_metric:
                 best_metric = current_metric
@@ -206,8 +188,8 @@ for epoch in range(epoches):
 
             VAE_Readout_model.load_state_dict(DL_dict_new)
 
-            print(f"Epoch of: {epoch} Perf:")
-            vel_cal(test_trial_vel, VAE_Readout_model, torch.Tensor(test_latents), x_after_lowd)
+            r2, rmse = vel_cal(test_trial_vel, VAE_Readout_model, torch.Tensor(test_latents), x_after_lowd)
+            print(f"Epoch: {epoch:4d} {' ' * 10} R2: {r2:0.4f} {' ' * 10} RMSE: {rmse:0.4f}")
 
             if epoch % 100 == 0 or epoch == epoches - 1:
                 # best_metric
