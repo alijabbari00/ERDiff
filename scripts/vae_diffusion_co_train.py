@@ -23,38 +23,44 @@ def get_batches(x, batch_size):
         yield x_batch
 
 
+RAND_SEED = np.random.randint(10000)
+print("RANDOM SEED: ", RAND_SEED)
+
 len_trial, num_neurons = 37, 187
 
-with open('datasets/Neural_Source.pkl', 'rb') as f:
-    train_data1 = pickle.load(f)['data']
+# with open('datasets/Neural_Source.pkl', 'rb') as f:
+#     train_data1 = pickle.load(f)['data']
+with open('../datasets/source_data_array.pkl', 'rb') as f:
+    train_data1 = pickle.load(f)
 
-train_trial_spikes1, train_trial_vel1 = train_data1['firing_rates'], train_data1['velocity']
+# train_trial_spikes1, train_trial_vel1 = train_data1['firing_rates'], train_data1['velocity']
+train_trial_spikes1, train_trial_vel1 = train_data1['neural'], train_data1['vel']
 
-start_pos = 1
-end_pos = 1
-
-train_trial_spikes_tide1 = np.array(
-    [spike[start_pos:len_trial + start_pos, :num_neurons] for spike in train_trial_spikes1])
-print(np.shape(train_trial_spikes_tide1))
-
-train_trial_vel_tide1 = np.array([spike[start_pos:len_trial + start_pos, :] for spike in train_trial_vel1])
+# start_pos = 1
+# end_pos = 1
+#
+# train_trial_spikes_tide1 = np.array(
+#     [spike[start_pos:len_trial + start_pos, :num_neurons] for spike in train_trial_spikes1])
+# print(np.shape(train_trial_spikes_tide1))
+# train_trial_vel_tide1 = np.array([spike[start_pos:len_trial + start_pos, :] for spike in train_trial_vel1])
+train_trial_spikes_tide1 = train_trial_spikes1
+train_trial_vel_tide1 = train_trial_vel1
 print(np.shape(train_trial_vel_tide1))
 
-bin_width = float(0.02) * 1000
+# bin_width = float(0.02) * 1000
+bin_width = float(0.01) * 1000
 
 train_trial_spikes_tide = train_trial_spikes_tide1
 train_trial_vel_tide = train_trial_vel_tide1
 
-kern_sd_ms = 100
+# kern_sd_ms = 100
+kern_sd_ms = float(0.01) * 1000 * 3
 kern_sd = int(round(kern_sd_ms / bin_width))
 window = signal.gaussian(kern_sd, kern_sd, sym=True)
 window /= np.sum(window)
 filt = lambda x: np.convolve(x, window, 'same')
 
 train_trial_spikes_smoothed = np.apply_along_axis(filt, 1, train_trial_spikes_tide)
-
-RAND_SEED = np.random.randint(10000)
-print("RANDOM SEED: ", RAND_SEED)
 
 indices = np.arange(train_trial_spikes_tide.shape[0])
 # np.random.seed(2023)
