@@ -225,7 +225,7 @@ MLA_model = VAE_MLA_Model()
 MLA_model.load_state_dict(vanilla_model_dict)
 
 with torch.no_grad():
-    _, _, _, _, test_latents, _, _ = MLA_model(spike_train, spike_test, p, q_test, train_flag=False)
+    _, _, _, _, test_latents, _, _, _ = MLA_model(spike_train, spike_test, p, q_test, train_flag=False)
 test_latents = np.array(test_latents)
 np.save("./npy_files/test_latents.npy", test_latents)
 
