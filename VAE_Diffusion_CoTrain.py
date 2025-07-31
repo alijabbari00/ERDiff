@@ -180,10 +180,8 @@ for epoch in range(n_epochs):
 
         _, _, train_latents, _ = model(spike_train, train_flag=False)
 
-        print("(VAE) Epoch: ", epoch, "Loss: ", val_total_loss.item())
         if val_total_loss < pre_total_loss_:
             pre_total_loss_ = val_total_loss
-            print(f"saving VAE model at epoch {epoch} with loss {val_total_loss}...")
             torch.save(model.state_dict(), 'model_checkpoints/source_vae_model.pth')
             np.save("./npy_files/train_latents.npy", train_latents)
 
@@ -210,10 +208,9 @@ for epoch in range(n_epochs):
         loss.backward()
         dm_optimizer.step()
 
-    print("epoch:", epoch, " " * 10, "loss:", total_loss)
+    print("epoch:", epoch, " " * 5, "loss:", total_loss)
 
     with torch.no_grad():
         if total_loss < pre_loss:
             pre_loss = total_loss
-            print(f"saving Diffusion model at epoch {epoch} with loss {total_loss}...")
             torch.save(dm_model.state_dict(), 'model_checkpoints/source_diffusion_model.pth')
