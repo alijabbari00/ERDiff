@@ -117,10 +117,7 @@ print(f'spike_day_0 shape: {spike_day_0.shape}, spike_day_k shape: {spike_day_k.
 
 dataloader = DataLoader(spike_dataset, batch_size=batch_size, shuffle=False)
 
-num_x, num_y, num_y_test = spike_day_0.shape[0], spike_day_k.shape[0], test_trial_spikes_smoothed.shape[0]
-
-p = Variable(torch.from_numpy(np.full((num_x, 1), 1 / num_x))).float().to(device)
-q = Variable(torch.from_numpy(np.full((num_y, 1), 1 / num_y))).float().to(device)
+num_y_test = test_trial_spikes_smoothed.shape[0]
 q_test = Variable(torch.from_numpy(np.full((num_y_test, 1), 1 / num_y_test))).float().to(device)
 
 timestamp = datetime.now().strftime("%m%d_%H%M")
@@ -134,6 +131,11 @@ for epoch in range(epoches):
     for batch in dataloader:
         batch_day_0 = batch[0].to(device)
         batch_day_k = batch[1].to(device)
+
+        num_x, num_y = batch_day_0.shape[0], batch_day_k.shape[0]
+
+        p = Variable(torch.from_numpy(np.full((num_x, 1), 1 / num_x))).float().to(device)
+        q = Variable(torch.from_numpy(np.full((num_y, 1), 1 / num_y))).float().to(device)
 
         re_sp, _, distri_0, distri_k, latents_k, output_sh_loss, log_var, _ = MLA_model(batch_day_0, batch_day_k, p, q,
                                                                                         train_flag=False)
@@ -157,8 +159,11 @@ for epoch in range(epoches):
 
         optimizer.step()
 
-
     with torch.no_grad():
+        num_x, num_y = spike_day_0.shape[0], spike_day_k.shape[0]
+
+        p = Variable(torch.from_numpy(np.full((num_x, 1), 1 / num_x))).float().to(device)
+        q = Variable(torch.from_numpy(np.full((num_y, 1), 1 / num_y))).float().to(device)
 
         if epoch % 5 == 0 or epoch == epoches - 1:
             current_metric = float(logger_performance(MLA_model, spike_day_0, spike_day_k, p, q_test, test_trial_vel))
