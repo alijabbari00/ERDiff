@@ -180,6 +180,7 @@ for epoch in range(n_epochs):
 
         _, _, train_latents, _ = model(spike_train, train_flag=False)
 
+        print("(VAE) Epoch: ", epoch, "Loss: ", val_total_loss.item())
         if val_total_loss < pre_total_loss_:
             pre_total_loss_ = val_total_loss
             print(f"saving VAE model at epoch {epoch} with loss {val_total_loss}...")
