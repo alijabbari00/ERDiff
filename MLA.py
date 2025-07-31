@@ -242,9 +242,10 @@ for epoch in range(epoches):
 
     with torch.no_grad():
         if (epoch % 5 == 0) or (epoch == n_epochs-1):
-            print(total_loss)
+            print(str(epoch), total_loss)
             logger.info("Epoch:" + str(epoch) )
             current_metric = float(logger_performance(MLA_model))
+            print(" " * 70, "current_metric", round(current_metric, 3))
             if current_metric > key_metric:
                 key_metric = current_metric
             if total_loss < pre_total_loss_:
