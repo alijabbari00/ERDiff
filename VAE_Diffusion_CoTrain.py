@@ -206,24 +206,24 @@ def q_sample(x_start, t, noise=None):
 channels = 1
 global_batch_size = 16
 
-train_spikes = np.load("npy_files/train_latents.npy")
-
-
-train_spike_data = np.expand_dims(train_spikes,1).astype(np.float32)
-# test_spike_data = np.expand_dims(test_spikes,1).astype(np.float32)
-
-
-train_spike_data = train_spike_data.transpose(0,1,3,2)
-# test_spike_data = test_spike_data.transpose(0,1,3,2)
+# train_spikes = np.load("npy_files/train_latents.npy")
+#
+#
+# train_spike_data = np.expand_dims(train_spikes,1).astype(np.float32)
+# # test_spike_data = np.expand_dims(test_spikes,1).astype(np.float32)
+#
+#
+# train_spike_data = train_spike_data.transpose(0,1,3,2)
+# # test_spike_data = test_spike_data.transpose(0,1,3,2)
 
 
 
 from torchvision import transforms
 from torch.utils.data import DataLoader
 
-dataloader = DataLoader(train_spike_data, batch_size=global_batch_size)
+# dataloader = DataLoader(train_spike_data, batch_size=global_batch_size)
 
-batch = next(iter(dataloader))
+# batch = next(iter(dataloader))
 # print(batch.keys())
 
 @torch.no_grad()
