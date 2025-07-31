@@ -22,7 +22,7 @@ def vel_cal(test_trial_vel_tide, VAE_Readout_model, test_latents):
     test_latents = Variable(torch.from_numpy(test_latents)).float()
 
     with torch.no_grad():
-        re_sp_test, vel_hat_test, _ = VAE_Readout_model( test_latents, train_flag=False)
+        re_sp_test, vel_hat_test = VAE_Readout_model( test_latents, train_flag=False)
 
         print("Aligned R**2:" + str(100 * r2_score(test_trial_vel_tide.reshape((-1,2)),vel_hat_test.reshape((-1,2)), multioutput='uniform_average')))
         print("Aligned RMSE:" + str(np.sqrt(mean_squared_error(test_trial_vel_tide.reshape((-1,2)),vel_hat_test.reshape((-1,2))))))
