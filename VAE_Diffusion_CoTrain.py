@@ -182,8 +182,8 @@ for epoch in range(n_epochs):
 
         if val_total_loss < pre_total_loss_:
             pre_total_loss_ = val_total_loss
+            print(f"saving VAE model at epoch {epoch} with loss {val_total_loss}...")
             torch.save(model.state_dict(), 'model_checkpoints/source_vae_model.pth')
-
             np.save("./npy_files/train_latents.npy", train_latents)
 
     train_latents = np.expand_dims(train_latents, 1).astype(np.float32)
@@ -211,6 +211,8 @@ for epoch in range(n_epochs):
 
     print("epoch:", epoch, " " * 10, "loss:", total_loss)
 
-    if total_loss < pre_loss:
-        pre_loss = total_loss
-        torch.save(dm_model.state_dict(), 'model_checkpoints/source_diffusion_model.pth')
+    with torch.no_grad():
+        if total_loss < pre_loss:
+            pre_loss = total_loss
+            print(f"saving Diffusion model at epoch {epoch} with loss {total_loss}...")
+            torch.save(dm_model.state_dict(), 'model_checkpoints/source_diffusion_model.pth')
