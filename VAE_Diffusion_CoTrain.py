@@ -100,7 +100,7 @@ import sys
 from tqdm import tqdm_notebook
 
 n_steps = 1
-n_epochs = 50
+n_epochs = 100
 batch_size = 16
 ae_res_weight = 10
 kld_weight = 1
