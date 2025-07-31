@@ -90,6 +90,7 @@ def get_loss(model, spike, emg):
     ae_loss = poisson_criterion(re_sp_, spike)
     emg_loss = mse_criterion(vel_hat_, emg)
     kld_loss = torch.mean(0.5 * (- log_var + mu ** 2 + log_var.exp() - 1))
+    print("All Losses: ", ae_loss, emg_loss, kld_loss)
     total_loss = ae_res_weight * ae_loss + emg_loss + kld_weight * kld_loss
     return total_loss
 
