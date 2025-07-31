@@ -163,11 +163,14 @@ for epoch in range(n_epochs):
     for ii in range(n_batches):
         optimizer.zero_grad()
         spike_batch = next(spike_gen_obj)
+        print("spike_batch shape: ", np.shape(spike_batch))
         emg_batch = next(emg_gen_obj)
 
         spike_batch = Variable(torch.from_numpy(spike_batch)).float()
         emg_batch = Variable(torch.from_numpy(emg_batch)).float()
 
+        print("model:")
+        print(model)
         # Loss
         batch_loss = get_loss(model, spike_batch, emg_batch)
 
