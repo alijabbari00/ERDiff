@@ -81,9 +81,12 @@ filt = lambda x: np.convolve(x, window, 'same')
 train_trial_spikes_smoothed = np.apply_along_axis(filt, 1, train_trial_spikes_tide)
 test_trial_spikes_smoothed = np.apply_along_axis(filt, 1, test_trial_spikes_tide)
 
+RAND_SEED = np.random.randint(10000)
+print("RANDOM SEED: ", RAND_SEED)
 
 indices = np.arange(train_trial_spikes_tide.shape[0])
-np.random.seed(2024)
+# np.random.seed(2023)
+np.random.seed(RAND_SEED)
 np.random.shuffle(indices)
 train_len = round(len(indices) * 0.8)
 real_train_trial_spikes_smed, val_trial_spikes_smed = train_trial_spikes_smoothed[indices[:train_len]], train_trial_spikes_smoothed[indices[train_len:]]
@@ -138,7 +141,8 @@ def setup_seed(seed):
      np.random.seed(seed)
      random.seed(seed)
      torch.backends.cudnn.deterministic = True
-setup_seed(2024)
+# setup_seed(2023)
+setup_seed(RAND_SEED)
 
 vanilla_model_dict = torch.load('model_checkpoints/source_vae_model')
 

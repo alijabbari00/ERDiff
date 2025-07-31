@@ -76,9 +76,12 @@ train_trial_spikes_smoothed = np.apply_along_axis(filt, 1, train_trial_spikes_ti
 
 # test_trial_spikes_smoothed = test_trial_spikes_smoothed[:,1:,:]
 
+RAND_SEED = np.random.randint(10000)
+print("RANDOM SEED: ", RAND_SEED)
 
 indices = np.arange(train_trial_spikes_tide.shape[0])
-np.random.seed(2024)
+# np.random.seed(2023)
+np.random.seed(RAND_SEED)
 np.random.shuffle(indices)
 train_len = round(len(indices) * 0.80)
 real_train_trial_spikes_smed, val_trial_spikes_smed = train_trial_spikes_smoothed[indices[:train_len]], train_trial_spikes_smoothed[indices[train_len:]]
@@ -97,7 +100,7 @@ import sys
 from tqdm import tqdm_notebook
 
 n_steps = 1
-n_epochs = 500
+n_epochs = 50
 batch_size = 16
 ae_res_weight = 10
 kld_weight = 1
@@ -146,7 +149,8 @@ def setup_seed(seed):
      np.random.seed(seed)
      random.seed(seed)
      torch.backends.cudnn.deterministic = True
-setup_seed(2024)
+# setup_seed(21)
+setup_seed(RAND_SEED)
 
 
 pre_total_loss_ = 1e18
@@ -292,7 +296,6 @@ dm_optimizer = Adam(dm_model.parameters(), lr=1e-3)
 from torchvision.utils import save_image
 
 
-epochs = 500
 pre_loss = 1e10
 
 
