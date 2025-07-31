@@ -100,7 +100,9 @@ import sys
 from tqdm import tqdm_notebook
 
 n_steps = 1
-n_epochs = 100
+# n_epochs = 500
+# read n_epochs from command line:
+n_epochs = int(sys.argv[1])
 batch_size = 16
 ae_res_weight = 10
 kld_weight = 1

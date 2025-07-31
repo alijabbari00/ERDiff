@@ -95,7 +95,9 @@ real_train_trial_dic_tide, val_trial_dic_tide = train_trial_dic_tide[indices[:tr
 
 
 n_steps = 1
-n_epochs = 500
+# n_epochs = 500
+# read n_epochs from command line:
+n_epochs = int(sys.argv[1])
 batch_size = 64
 
 
