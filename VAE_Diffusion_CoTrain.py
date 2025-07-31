@@ -87,15 +87,9 @@ emg_val = Variable(torch.from_numpy(val_trial_vel_tide)).float()
 
 def get_loss(model, spike, emg):
     re_sp_, vel_hat_, mu, log_var = model(spike, train_flag=True)
-    print("re_sp_ shape: ", re_sp_.shape)
-    print("spike shape: ", spike.shape)
-    print("re_sp_ is nan: ", torch.isnan(re_sp_).any())
-    print("spike is nan: ", torch.isnan(spike).any())
     ae_loss = poisson_criterion(re_sp_, spike)
-    print("ae_loss: ", ae_loss)
     emg_loss = mse_criterion(vel_hat_, emg)
     kld_loss = torch.mean(0.5 * (- log_var + mu ** 2 + log_var.exp() - 1))
-    print("All Losses: ", ae_loss, emg_loss, kld_loss)
     total_loss = ae_res_weight * ae_loss + emg_loss + kld_weight * kld_loss
     return total_loss
 

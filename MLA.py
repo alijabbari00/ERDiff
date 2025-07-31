@@ -184,8 +184,8 @@ for epoch in range(n_epochs):
 
     optimizer.zero_grad()
 
-    re_sp, _, distri_0, distri_k, latents_k, output_sh_loss, log_var = MLA_model(spike_day_0, spike_day_k, p, q,
-                                                                                 train_flag=True)
+    re_sp, _, distri_0, distri_k, latents_k, output_sh_loss, log_var, _ = MLA_model(spike_day_0, spike_day_k, p, q,
+                                                                                    train_flag=True)
 
     total_loss = output_sh_loss
 
