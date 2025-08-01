@@ -198,7 +198,7 @@ for epoch in range(epoches):
             VAE_Readout_model.load_state_dict(DL_dict_new)
 
             r2, rmse = vel_cal(test_trial_vel, VAE_Readout_model, torch.Tensor(test_latents), x_after_lowd)
-            print(f"Epoch: {epoch:4d} {' ' * 10} R2: {r2:0.4f} {' ' * 10} RMSE: {rmse:0.4f}")
+            print(f"Epoch: {epoch:4d} {' ' * 10} loss: {total_loss.item():0.4f} {' ' * 10} R2: {r2:0.4f} {' ' * 10} RMSE: {rmse:0.4f}")
 
             if epoch % 100 == 0 or epoch == epoches - 1:
                 # best_metric
