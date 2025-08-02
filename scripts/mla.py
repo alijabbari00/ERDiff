@@ -183,7 +183,7 @@ for epoch in range(epochs):
             vanilla_model_dict = torch.load('../model_checkpoints/vae_model_mla.pth', weights_only=True,
                                             map_location=torch.device('cpu'))
 
-            VAE_Readout_model = VAE_Readout_Model(len_trial, num_neurons_s, num_neurons_t)
+            VAE_Readout_model = VAE_Readout_Model(len_trial, num_neurons_s, num_neurons_t, vel_dim)
             DL_dict_keys = VAE_Readout_model.state_dict().keys()
             vanilla_model_dict_keys = vanilla_model_dict.keys()
 
