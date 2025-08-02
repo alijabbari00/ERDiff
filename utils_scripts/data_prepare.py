@@ -43,6 +43,8 @@ def cut_trials(x: np.ndarray, y: np.ndarray, trial_length: int) -> (np.ndarray, 
     and return a resulting x and y of shape [N/trial_length, trial_length, a] and [N/trial_length, trial_length, b]
     """
     n_full_trials = x.shape[0] // trial_length
+    if n_full_trials % 64 == 1:
+        n_full_trials -= 1
     usable_rows = n_full_trials * trial_length
     x_trimmed = x[:usable_rows]
     y_trimmed = y[:usable_rows]
