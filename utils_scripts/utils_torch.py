@@ -33,8 +33,9 @@ class SpikeDataset(Dataset):
 def logger_performance(model, spike_day_0, spike_day_k, p, q_test, test_trial_vel):
     re_sp_test, vel_hat_test, _, _, _, _, _, _ = model(spike_day_0, spike_day_k, p, q_test, train_flag=False)
 
-    y_true = test_trial_vel.reshape((-1, 2))
-    y_pred = vel_hat_test.cpu().detach().numpy().reshape((-1, 2))
+    vel_dim = test_trial_vel.shape[-1]
+    y_true = test_trial_vel.reshape((-1, vel_dim))
+    y_pred = vel_hat_test.cpu().detach().numpy().reshape((-1, vel_dim))
 
     if np.isnan(y_true).any() or np.isnan(y_pred).any():
         print("NaN detected in input data.")
@@ -49,8 +50,9 @@ def vel_cal(test_trial_vel_tide, VAE_Readout_model, test_latents, x_after_lowd):
     with torch.no_grad():
         re_sp_test, vel_hat_test = VAE_Readout_model(test_latents, train_flag=False)
 
-        y_true = test_trial_vel_tide.reshape((-1, 2))
-        y_pred = vel_hat_test.cpu().detach().numpy().reshape((-1, 2))
+        vel_dim = test_trial_vel_tide.shape[-1]
+        y_true = test_trial_vel_tide.reshape((-1, vel_dim))
+        y_pred = vel_hat_test.cpu().detach().numpy().reshape((-1, vel_dim))
 
         assert not np.isnan(y_pred).any(), "Error: y_pred contains NaN values!"
 

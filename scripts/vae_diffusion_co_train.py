@@ -97,7 +97,8 @@ pre_total_loss_ = 1e18
 len_trial = train_trial_spikes_smoothed.shape[1]
 num_neurons = train_trial_spikes_smoothed.shape[2]
 
-model = VAE_Model(len_trial=len_trial, num_neurons=num_neurons)
+vel_dim = train_trial_vel_tide.shape[2]
+model = VAE_Model(len_trial=len_trial, num_neurons=num_neurons, vel_dim=vel_dim)
 optimizer = torch.optim.Adam(model.parameters(), lr=l_rate)
 
 timesteps = 100

@@ -5,14 +5,14 @@ start_pos = 0
 
 
 class VAE_Model(nn.Module):
-    def __init__(self, len_trial, num_neurons):
+    def __init__(self, len_trial, num_neurons, vel_dim):
         super().__init__()
         # Hyper-Parameters
         self.len_trial = len_trial
         self.spike_dim = num_neurons
         self.low_dim = 64
         self.latent_dim = 8
-        self.vel_dim = 2
+        self.vel_dim = vel_dim
         self.encoder_n_layers, self.decoder_n_layers = 1, 1
         self.hidden_dims = [64, 32]
 
@@ -47,9 +47,9 @@ class VAE_Model(nn.Module):
             if len(param.shape) > 1:
                 nn.init.xavier_uniform_(param, 0.1)
 
-        self.vde_fc_minus_0 = nn.Linear(self.latent_dim, 2, bias=False)
-        self.vde_fc_minus_1 = nn.Linear(self.latent_dim, 2, bias=False)
-        self.vde_fc_minus_2 = nn.Linear(self.latent_dim, 2, bias=False)
+        self.vde_fc_minus_0 = nn.Linear(self.latent_dim, self.vel_dim, bias=False)
+        self.vde_fc_minus_1 = nn.Linear(self.latent_dim, self.vel_dim, bias=False)
+        self.vde_fc_minus_2 = nn.Linear(self.latent_dim, self.vel_dim, bias=False)
 
         self.elu = nn.ELU()
         self.softplus = nn.Softplus()
