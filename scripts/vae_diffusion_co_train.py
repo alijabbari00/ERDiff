@@ -1,9 +1,8 @@
-import pickle
+import argparse
 import random
 import sys
 
 import numpy as np
-import scipy.signal as signal
 import torch
 from torch import nn
 from torch.autograd import Variable
@@ -13,56 +12,36 @@ from torch.utils.data import DataLoader
 sys.path.append('..')
 from model_functions.diffusion import diff_STBlock, p_losses
 from model_functions.vae import VAE_Model
+from utils_scripts.data_prepare import load_tensors_by_index, cut_trials, get_batches
 
+parser = argparse.ArgumentParser(description="Set hyperparameters from command line")
 
-def get_batches(x, batch_size):
-    n_batches = len(x) // (batch_size)
-    x = x[:n_batches * batch_size:]
-    for n in range(0, x.shape[0], batch_size):
-        x_batch = x[n:n + (batch_size)]
-        yield x_batch
+parser.add_argument("--epochs", type=int, default=500, help="Alternative epoch count (possible typo in config)")
+parser.add_argument("--seed", type=int, default=2024, help="Random seed for reproducibility")
+parser.add_argument("--dataset_name", type=str, default='erdiff_synthetic_npz', help="Dataset name")
+parser.add_argument("--trial_len", type=int, default=25, help="Trial length")
+parser.add_argument("--source_day", type=int, default=0, help="Source day")
+parser.add_argument("--target_day", type=int, default=1, help="Target day")
 
+args = parser.parse_args()
 
-RAND_SEED = np.random.randint(10000)
-print("RANDOM SEED: ", RAND_SEED)
+config = vars(args)
 
-# with open('datasets/Neural_Source.pkl', 'rb') as f:
-#     train_data1 = pickle.load(f)['data']
-with open('../datasets/source_data_array.pkl', 'rb') as f:
-    train_data1 = pickle.load(f)
+n_epochs = config["epochs"]
+random_seed = config["seed"]
+dataset_name = config["dataset_name"]
+trial_len = config["trial_len"]
+source_day = config["source_day"]
+target_day = config["target_day"]
 
-# train_trial_spikes1, train_trial_vel1 = train_data1['firing_rates'], train_data1['velocity']
-train_trial_spikes1, train_trial_vel1 = train_data1['neural'], train_data1['vel']
+train_spikes_concat, train_vel_concat = load_tensors_by_index(source_day, dataset_name)
+train_trial_spikes_smoothed, train_trial_vel_tide = cut_trials(train_spikes_concat, train_vel_concat, trial_len)
 
-# start_pos = 1
-# end_pos = 1
-#
-# train_trial_spikes_tide1 = np.array(
-#     [spike[start_pos:len_trial + start_pos, :num_neurons] for spike in train_trial_spikes1])
-# print(np.shape(train_trial_spikes_tide1))
-# train_trial_vel_tide1 = np.array([spike[start_pos:len_trial + start_pos, :] for spike in train_trial_vel1])
-train_trial_spikes_tide1 = train_trial_spikes1
-train_trial_vel_tide1 = train_trial_vel1
-print(np.shape(train_trial_vel_tide1))
+print(f"dataset:: original shapes: {train_spikes_concat.shape}, {train_vel_concat.shape}     "
+      f"cut shapes: {train_trial_spikes_smoothed.shape}, {train_trial_vel_tide.shape}")
 
-# bin_width = float(0.02) * 1000
-bin_width = float(0.01) * 1000
-
-train_trial_spikes_tide = train_trial_spikes_tide1
-train_trial_vel_tide = train_trial_vel_tide1
-
-# kern_sd_ms = 100
-kern_sd_ms = float(0.01) * 1000 * 3
-kern_sd = int(round(kern_sd_ms / bin_width))
-window = signal.gaussian(kern_sd, kern_sd, sym=True)
-window /= np.sum(window)
-filt = lambda x: np.convolve(x, window, 'same')
-
-train_trial_spikes_smoothed = np.apply_along_axis(filt, 1, train_trial_spikes_tide)
-
-indices = np.arange(train_trial_spikes_tide.shape[0])
-# np.random.seed(2023)
-np.random.seed(RAND_SEED)
+indices = np.arange(train_trial_spikes_smoothed.shape[0])
+np.random.seed(random_seed)
 np.random.shuffle(indices)
 train_len = round(len(indices) * 0.80)
 real_train_trial_spikes_smed, val_trial_spikes_smed = train_trial_spikes_smoothed[indices[:train_len]], \
@@ -70,9 +49,7 @@ real_train_trial_spikes_smed, val_trial_spikes_smed = train_trial_spikes_smoothe
 real_train_trial_vel_tide, val_trial_vel_tide = train_trial_vel_tide[indices[:train_len]], train_trial_vel_tide[
     indices[train_len:]]
 
-# n_epochs = 500
 # read n_epochs from command line:
-n_epochs = int(sys.argv[1])
 batch_size = 32
 ae_res_weight = 10
 kld_weight = 1
@@ -113,12 +90,12 @@ def setup_seed(seed):
 
 
 # setup_seed(21)
-setup_seed(RAND_SEED)
+setup_seed(random_seed)
 
 pre_total_loss_ = 1e18
 
-len_trial = train_trial_spikes_tide.shape[1]
-num_neurons = train_trial_spikes_tide.shape[2]
+len_trial = train_trial_spikes_smoothed.shape[1]
+num_neurons = train_trial_spikes_smoothed.shape[2]
 
 model = VAE_Model(len_trial=len_trial, num_neurons=num_neurons)
 optimizer = torch.optim.Adam(model.parameters(), lr=l_rate)

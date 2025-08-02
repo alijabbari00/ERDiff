@@ -1,15 +1,15 @@
 import argparse
-import pickle
 import sys
 from datetime import datetime
 
 import numpy as np
-import scipy.signal as signal
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
+
+from utils_scripts.data_prepare import load_tensors_by_index, cut_trials
 
 sys.path.append('..')
 from model_functions.diffusion import diff_STBlock, q_sample
@@ -24,37 +24,41 @@ parser.add_argument("--learning_rate", type=float, default=3e-3, help="Learning 
 parser.add_argument("--batch_size", type=int, default=32, help="Batch size for training")
 parser.add_argument("--appro_alpha", type=float, default=0.0, help="Approximator alpha parameter")
 parser.add_argument("--ot_weight", type=float, default=0.8, help="Weight for optimal transport loss")
-parser.add_argument("--epoches", type=int, default=400, help="Alternative epoch count (possible typo in config)")
+parser.add_argument("--epochs", type=int, default=400, help="Alternative epoch count (possible typo in config)")
 parser.add_argument("--seed", type=int, default=2024, help="Random seed for reproducibility")
+parser.add_argument("--dataset_name", type=str, default='erdiff_synthetic_npz', help="Dataset name")
+parser.add_argument("--trial_len", type=int, default=25, help="Trial length")
+parser.add_argument("--source_day", type=int, default=0, help="Source day")
+parser.add_argument("--target_day", type=int, default=1, help="Target day")
 
 args = parser.parse_args()
 
 config = vars(args)
 
+pre_total_loss_ = 1e8
+best_metric = -1000
+l_rate = config["learning_rate"]
+batch_size = config["batch_size"]
+ot_weight = config["ot_weight"]
+appro_alpha = config["appro_alpha"]
+epochs = config["epochs"]
+n_epochs = config["epochs"]
+random_seed = config["seed"]
+dataset_name = config["dataset_name"]
+trial_len = config["trial_len"]
+source_day = config["source_day"]
+target_day = config["target_day"]
+
 print("Config Data:", config)
 
-with open('../datasets/source_data_array.pkl', 'rb') as f:
-    train_data = pickle.load(f)
+train_spikes_concat, train_vel_concat = load_tensors_by_index(source_day, dataset_name)
+train_trial_spikes_smoothed, train_trial_vel_tide = cut_trials(train_spikes_concat, train_vel_concat, trial_len)
 
-with open('../datasets/target_data_array.pkl', 'rb') as f:
-    test_data = pickle.load(f)
+test_spikes_concat, test_vel_concat = load_tensors_by_index(target_day, dataset_name)
+test_trial_spikes_smoothed, test_trial_vel_tide = cut_trials(test_spikes_concat, test_vel_concat, trial_len)
 
-train_trial_spikes1, train_trial_vel1 = train_data['neural'], train_data['vel']
-
-test_trial_spikes, test_trial_vel = test_data['neural'], test_data['vel']
-
-bin_width = float(0.01) * 1000
-
-train_trial_spikes_tide = train_trial_spikes1
-
-kern_sd_ms = float(0.01) * 1000 * 3
-kern_sd = int(round(kern_sd_ms / bin_width))
-window = signal.gaussian(kern_sd, kern_sd, sym=True)
-window /= np.sum(window)
-filt = lambda x: np.convolve(x, window, 'same')
-
-train_trial_spikes_smoothed = np.apply_along_axis(filt, 1, train_trial_spikes_tide)
-test_trial_spikes_smoothed = np.apply_along_axis(filt, 1, test_trial_spikes)
+print(f"dataset:: original shapes: {train_spikes_concat.shape}, {train_vel_concat.shape}     "
+      f"cut shapes: {train_trial_spikes_smoothed.shape}, {train_trial_vel_tide.shape}")
 
 timesteps = 100
 channels = 1
@@ -77,9 +81,9 @@ setup_seed(config["seed"])
 vanilla_model_dict = torch.load('../model_checkpoints/source_vae_model.pth', weights_only=True,
                                 map_location=torch.device('cpu'))
 
-len_trial = train_trial_spikes_tide.shape[1]
-num_neurons_s = train_trial_spikes_tide.shape[2]
-num_neurons_t = test_trial_spikes.shape[2]
+len_trial = train_trial_spikes_smoothed.shape[1]
+num_neurons_s = train_trial_spikes_smoothed.shape[2]
+num_neurons_t = test_trial_spikes_smoothed.shape[2]
 
 MLA_model = VAE_MLA_Model(len_trial, num_neurons_s, num_neurons_t).to(device)
 MLA_dict_keys = MLA_model.state_dict().keys()
@@ -92,13 +96,6 @@ for key in vanilla_model_dict_keys:
 
 MLA_model.load_state_dict(MLA_dict_new)
 
-pre_total_loss_ = 1e8
-best_metric = -1000
-l_rate = config["learning_rate"]
-batch_size = config["batch_size"]
-ot_weight = config["ot_weight"]
-appro_alpha = config["appro_alpha"]
-
 optimizer = torch.optim.SGD(MLA_model.parameters(), lr=l_rate)
 criterion = nn.MSELoss()
 poisson_criterion = nn.PoissonNLLLoss(log_input=False)
@@ -110,8 +107,6 @@ for param in MLA_model.parameters():
 MLA_model.align_layer.weight.requires_grad = True
 MLA_model.low_d_readin_t_2.weight.requires_grad = True
 MLA_model.low_d_readin_t_2.bias.requires_grad = True
-
-epoches = config["epoches"]
 
 spike_day_0 = Variable(torch.from_numpy(train_trial_spikes_smoothed)).float().to(device)
 spike_day_k = Variable(torch.from_numpy(test_trial_spikes_smoothed)).float().to(device)
@@ -128,7 +123,7 @@ timestamp = datetime.now().strftime("%m%d_%H%M")
 exp_name = f'ERDiff_MLA_{timestamp}'
 
 # Maximum Likelihood Alignment
-for epoch in range(epoches):
+for epoch in range(epochs):
 
     optimizer.zero_grad()
 
@@ -169,8 +164,9 @@ for epoch in range(epoches):
         p = Variable(torch.from_numpy(np.full((num_x, 1), 1 / num_x))).float().to(device)
         q = Variable(torch.from_numpy(np.full((num_y, 1), 1 / num_y))).float().to(device)
 
-        if epoch % 5 == 0 or epoch == epoches - 1:
-            current_metric = float(logger_performance(MLA_model, spike_day_0, spike_day_k, p, q_test, test_trial_vel))
+        if epoch % 5 == 0 or epoch == epochs - 1:
+            current_metric = float(
+                logger_performance(MLA_model, spike_day_0, spike_day_k, p, q_test, test_trial_vel_tide))
             if current_metric > best_metric:
                 best_metric = current_metric
 
@@ -197,9 +193,10 @@ for epoch in range(epoches):
 
             VAE_Readout_model.load_state_dict(DL_dict_new)
 
-            r2, rmse = vel_cal(test_trial_vel, VAE_Readout_model, torch.Tensor(test_latents), x_after_lowd)
-            print(f"Epoch: {epoch:4d} {' ' * 10} loss: {total_loss.item():0.4f} {' ' * 10} R2: {r2:0.4f} {' ' * 10} RMSE: {rmse:0.4f}")
+            r2, rmse = vel_cal(test_trial_vel_tide, VAE_Readout_model, torch.Tensor(test_latents), x_after_lowd)
+            print(f"Epoch: {epoch:4d} {' ' * 10} loss: {total_loss.item():0.4f} {' ' * 10} "
+                  f"R2: {r2:0.4f} {' ' * 10} RMSE: {rmse:0.4f}")
 
-            if epoch % 100 == 0 or epoch == epoches - 1:
+            if epoch % 100 == 0 or epoch == epochs - 1:
                 # best_metric
                 print(f"Best_Metric at {epoch} is : {best_metric:0.4f}")
