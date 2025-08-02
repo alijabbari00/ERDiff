@@ -142,7 +142,6 @@ class VAE_MLA_Model(nn.Module):
         # q = torch.clip(q, 1e-5, 1)
         # with torch.no_grad():
         # T = ot.emd(torch.squeeze(p), torch.squeeze(q), M) # exact linear program
-        print("p and q shape:", p.shape, q.shape)
         sh_d = ot.sinkhorn2(torch.squeeze(p), torch.squeeze(q), M / M.max(), reg=0.02)  # exact linear program
 
         # Spike Decoder
