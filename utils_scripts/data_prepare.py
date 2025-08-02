@@ -1,8 +1,10 @@
 import os
+import sys
 
 import numpy as np
 
-import constants
+sys.path.append('..')
+from utils_scripts import constants
 
 
 def get_dataset_folder(dataset_name: str):
